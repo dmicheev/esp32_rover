@@ -1,13 +1,8 @@
-#include "wifi.h"
+#include "rwifi.h"
 
 #include <Arduino.h>
-
-// WiFi для ESP32 Arduino 3.x - подключаем все необходимые заголовки
-#include "soc/soc_caps.h"
-#if SOC_WIFI_SUPPORTED
 #include <WiFi.h>
-#include <WiFiAP.h>
-#endif
+
 
 // Конфигурация WiFi
 #define WIFI_SSID "netis_2.4G_E86C87"
@@ -20,17 +15,14 @@ void wifi_init() {
   Serial.println("\n=== WiFi Initialization ===");
   
   // Отключаем режим модемы для экономии энергии
-  WiFi.setSleep(false);
+  //WiFi.setSleep(false);
   
-  // Создаём точку доступа
-  Serial.print("Creating Access Point: ");
-  Serial.println(WIFI_SSID);
-  
-  bool apResult = WiFi.softAP(WIFI_SSID, WIFI_PASSWORD);
-  
-  if (!apResult) {
-    Serial.println("ERROR: Failed to create Access Point");
-    return;
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // Запускаем процесс подключения [citation:1][citation:2][citation:4]
+
+  // Цикл ожидания подключения
+  while (WiFi.status() != WL_CONNECTED) { // Проверяем статус [citation:1][citation:2][citation:4]
+    delay(500); // Ждем полсекунды [citation:1][citation:2][citation:4]
+    Serial.print("."); // Печатаем точки, чтобы видеть процесс [citation:1][citation:2][citation:4]
   }
   
   Serial.println("Access Point created successfully!");
@@ -38,12 +30,12 @@ void wifi_init() {
   // Ждём присвоения IP адреса
   delay(100);
   
-  IPAddress IP = WiFi.softAPIP();
+
   Serial.print("AP IP address: ");
-  Serial.println(IP);
+  Serial.println(WiFi.localIP());
   
   Serial.print("AP MAC address: ");
-  Serial.println(WiFi.softAPmacAddress());
+  Serial.println(WiFi.macAddress());
   
   wifiConnected = true;
   

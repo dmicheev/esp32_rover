@@ -2,8 +2,15 @@
 #define _UI_H
 
 #include <Arduino.h>
+#include <FS.h>
 
-// Получение HTML страницы интерфейса
+// Инициализация файловой системы
+bool ui_init();
+
+// Получение HTML страницы из файловой системы
 String getUIHTML();
+
+// Проверка наличия файла
+bool ui_fileExists(const String& path);
 
 #endif

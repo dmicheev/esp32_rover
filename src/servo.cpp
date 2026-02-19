@@ -263,14 +263,14 @@ void setup_serv() {
   // 1. Инициализация I2C с нужными пинами
   if (!Wire.begin(I2C_SDA, I2C_SCL)) {
     Serial.println("Wire init ERROR !!!"); 
-    while (1) delay(10);
+    return;
   };
   Serial.println("I2C initialized");
 
   // 2. Инициализация PCA9685
   if (!pwm.begin()) {
     Serial.println("PWM init ERROR !!!"); 
-    while (1) delay(10);
+    return;
   };
   Serial.println("PCA9685 initialized");
 

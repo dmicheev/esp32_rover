@@ -23,15 +23,18 @@ esp32_S3/
 │   ├── pins.h            # Конфигурация GPIO пинов
 │   ├── rwifi.h/cpp       # WiFi подключение и настройка
 │   ├── api.h/cpp         # REST API сервер
-│   ├── ui.h/cpp          # HTML интерфейс управления
+│   ├── ui.h/cpp          # LittleFS интерфейс управления
 │   ├── servo.h/cpp       # Управление сервоприводами (PCA9685)
 │   └── dcmotor.h/cpp     # Управление DC-моторами
+├── data/
+│   └── index.html        # HTML страница веб-интерфейса
 ├── lib/                  # Сторонние библиотеки
 ├── test/                 # Юнит-тесты
 ├── include/              # Заголовочные файлы проекта
 ├── platformio.ini        # Конфигурация PlatformIO
 ├── README.md             # Основная документация
-└── WIFI_CONTROL.md       # Документация по WiFi управлению
+├── WIFI_CONTROL.md       # Документация по WiFi управлению
+└── LITTLEFS_UPLOAD.md    # Инструкция по загрузке файлов
 ```
 
 ---
@@ -308,9 +311,14 @@ pio run
 # Загрузка прошивки
 pio run --target upload
 
+# Загрузка файлов LittleFS (HTML интерфейс)
+pio run --target uploadfs
+
 # Запуск монитора порта
 pio device monitor
 ```
+
+> ⚠️ **Важно:** После первой прошивки обязательно загрузите файлы в LittleFS командой `pio run --target uploadfs`
 
 ### Конфигурация (platformio.ini)
 
