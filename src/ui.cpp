@@ -28,17 +28,17 @@ bool ui_init() {
 // Получение HTML страницы из файловой системы
 String getUIHTML() {
   File file = LittleFS.open("/index.html", "r");
-  
+
   if (!file) {
     Serial.println("ERROR: Failed to open index.html");
     return String("<html><body><h1>Error: File not found</h1></body></html>");
   }
-  
+
   String html = "";
   while (file.available()) {
     html += file.readString();
   }
-  
+
   file.close();
   return html;
 }

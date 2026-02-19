@@ -13,6 +13,7 @@ extern WiFiClass WiFi;
 #include "dcmotor.h"
 #include "ui.h"
 #include "rwifi.h"
+#include "apiota.h"
 
 // Веб-сервер на порту 8080
 WebServer server(8080);
@@ -328,7 +329,7 @@ void handleOptions() {
 void handleNotFound() {
   String message = "Not Found: " + String(server.method()) + " " + server.uri();
   api_log(message);
-  
+
   // Для API эндпоинтов возвращаем JSON ошибку
   if (server.uri().startsWith("/api/")) {
     sendJSONResponse(404, "{\"error\":\"Endpoint not found\"}");
@@ -345,6 +346,9 @@ void api_init() {
 
   // Маршруты UI
   server.on("/", HTTP_GET, handleRoot);
+
+  // OTA маршруты
+  apiota_init(server);
 
   // Маршруты API
   server.on("/api/status", HTTP_GET, handleStatus);

@@ -49,6 +49,23 @@
       gap: 10px;
     }
 
+    .btn-ota {
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      color: #1a1a2e;
+      padding: 8px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 10px rgba(0, 217, 255, 0.3);
+    }
+
+    .btn-ota:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 217, 255, 0.5);
+    }
+
     /* ===== Закладки (Tabs) ===== */
     .tabs-container {
       margin-bottom: 20px;
@@ -598,6 +615,9 @@
       </div>
       <div class="status-item">
         <span>IP: <strong id="robot-ip">Loading...</strong></span>
+      </div>
+      <div class="status-item">
+        <a href="/api/ota" class="btn-ota" target="_blank">🔄 OTA Update</a>
       </div>
     </div>
 

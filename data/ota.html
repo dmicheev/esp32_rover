@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTA Update</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #00d9ff;
+      text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+    }
+    .upload-area {
+      border: 2px dashed rgba(0, 217, 255, 0.5);
+      border-radius: 10px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #00d9ff;
+      background: rgba(0, 217, 255, 0.1);
+    }
+    .upload-area p {
+      color: #aaa;
+      margin-bottom: 15px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .btn-select {
+      background: #00d9ff;
+      color: #1a1a2e;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-select:hover {
+      background: #00e5ff;
+      box-shadow: 0 0 15px rgba(0, 217, 255, 0.5);
+    }
+    .btn-upload {
+      width: 100%;
+      background: #00ff88;
+      color: #1a1a2e;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 15px;
+    }
+    .btn-upload:hover {
+      background: #00ff6a;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+    .btn-upload:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #file-name {
+      margin-top: 15px;
+      color: #00ff88;
+      font-size: 14px;
+    }
+    #progress-container {
+      margin-top: 20px;
+      display: none;
+    }
+    #progress-bar {
+      width: 100%;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    #status {
+      margin-top: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .success { color: #00ff88; }
+    .error { color: #ff4444; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #00d9ff;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 OTA Update</h1>
+    
+    <form id="ota-form" enctype="multipart/form-data">
+      <div class="upload-area" id="upload-area">
+        <p>Перетащите .bin файл сюда<br>или нажмите для выбора</p>
+        <button type="button" class="btn-select" onclick="document.getElementById('firmware').click()">Выбрать файл</button>
+        <input type="file" id="firmware" name="firmware" accept=".bin" onchange="updateFileName()">
+        <div id="file-name"></div>
+      </div>
+      
+      <button type="submit" class="btn-upload" id="btn-upload" disabled>Загрузить прошивку</button>
+    </form>
+    
+    <div id="progress-container">
+      <div id="progress-bar">
+        <div id="progress-fill"></div>
+      </div>
+      <div id="status"></div>
+    </div>
+    
+    <a href="/" class="back-link">← Вернуться на главную</a>
+  </div>
+  
+  <script>
+    const uploadArea = document.getElementById('upload-area');
+    const firmwareInput = document.getElementById('firmware');
+    const fileName = document.getElementById('file-name');
+    const btnUpload = document.getElementById('btn-upload');
+    const progressContainer = document.getElementById('progress-container');
+    const progressFill = document.getElementById('progress-fill');
+    const status = document.getElementById('status');
+    const form = document.getElementById('ota-form');
+    
+    // Drag & drop
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].name.endsWith('.bin')) {
+        firmwareInput.files = files;
+        updateFileName();
+      } else {
+        alert('Пожалуйста, выберите .bin файл');
+      }
+    });
+    
+    uploadArea.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') {
+        firmwareInput.click();
+      }
+    });
+    
+    function updateFileName() {
+      const file = firmwareInput.files[0];
+      if (file) {
+        fileName.textContent = file.name + ' (' + formatSize(file.size) + ')';
+        btnUpload.disabled = false;
+      } else {
+        fileName.textContent = '';
+        btnUpload.disabled = true;
+      }
+    }
+    
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+      return (bytes / 1048576).toFixed(2) + ' MB';
+    }
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const file = firmwareInput.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('firmware', file);
+      
+      btnUpload.disabled = true;
+      progressContainer.style.display = 'block';
+      status.textContent = 'Загрузка...';
+      status.className = '';
+      
+      try {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percent = (e.loaded / e.total) * 100;
+            progressFill.style.width = percent + '%';
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status === 200) {
+            status.textContent = '✅ Прошивка успешно загружена! Устройство перезагружается...';
+            status.className = 'success';
+            progressFill.style.width = '100%';
+          } else {
+            status.textContent = '❌ Ошибка: ' + xhr.responseText;
+            status.className = 'error';
+            btnUpload.disabled = false;
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          status.textContent = '❌ Ошибка соединения';
+          status.className = 'error';
+          btnUpload.disabled = false;
+        });
+        
+        xhr.open('POST', '/api/ota/upload');
+        xhr.send(formData);
+      } catch (err) {
+        status.textContent = '❌ Ошибка: ' + err.message;
+        status.className = 'error';
+        btnUpload.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
