@@ -66,12 +66,12 @@ void handleStatus() {
 // GET /api/servo - получить углы всех сервоприводов
 void handleGetServos() {
   api_log("GET /api/servo");
-  
+
   JsonDocument doc;
-  JsonArray servos = doc.createNestedArray("servos");
+  JsonArray servos = doc["servos"].to<JsonArray>();
 
   for (int i = 0; i < 4; i++) {
-    JsonObject servo = servos.createNestedObject();
+    JsonObject servo = servos.add<JsonObject>();
     servo["id"] = i;
     servo["angle"] = servo_getAngle(i);
     servo["min"] = servo_getMin(i);
