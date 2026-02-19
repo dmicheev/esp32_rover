@@ -49,6 +49,173 @@
       gap: 10px;
     }
 
+    /* ===== Закладки (Tabs) ===== */
+    .tabs-container {
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 15px 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .tab-button.active {
+      background: rgba(0, 217, 255, 0.2);
+      border-color: #00d9ff;
+      color: #00d9ff;
+      box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Джойстик ===== */
+    .joystick-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 30px;
+    }
+
+    .joystick-panel {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .joystick-panel h2 {
+      color: #00d9ff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .joystick-control {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      border: 3px solid rgba(0, 217, 255, 0.3);
+      touch-action: none;
+    }
+
+    .joystick-knob {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #00d9ff, #00ff88);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 217, 255, 0.5);
+      transition: box-shadow 0.2s;
+    }
+
+    .joystick-knob:active {
+      box-shadow: 0 6px 20px rgba(0, 217, 255, 0.8);
+    }
+
+    .joystick-values {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .joystick-values .value-display {
+      font-size: 18px;
+      color: #00ff88;
+      margin: 5px 0;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .mode-btn {
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      color: #aaa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .mode-btn.active {
+      background: rgba(0, 217, 255, 0.2);
+      border-color: #00d9ff;
+      color: #00d9ff;
+    }
+
+    .motor-status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .motor-status-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .motor-status-item h4 {
+      color: #ffcc00;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .motor-status-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00ff88;
+    }
+
     .status-led {
       width: 12px;
       height: 12px;
@@ -434,6 +601,17 @@
       </div>
     </div>
 
+    <!-- Закладки -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('parameters')">🎛️ Параметры</button>
+        <button class="tab-button" onclick="switchTab('joystick')">🕹️ Джойстик</button>
+      </div>
+    </div>
+
+    <!-- Вкладка 1: Параметры -->
+    <div id="tab-parameters" class="tab-content active">
+
     <!-- Сервоприводы -->
     <div class="panel">
       <h2>🔧 Сервоприводы</h2>
@@ -617,10 +795,101 @@
         <button class="btn-apply" onclick="setAllMotors()" style="width: 100%;">🚀 Установить скорость всех моторов</button>
       </div>
     </div>
+    </div>
+
+    <!-- Вкладка 2: Джойстик -->
+    <div id="tab-joystick" class="tab-content">
+      <div class="joystick-container">
+        <!-- Левая панель: Джойстик -->
+        <div class="joystick-panel">
+          <h2>🕹️ Виртуальный джойстик</h2>
+          
+          <div class="joystick-control" id="joystick">
+            <div class="joystick-knob" id="joystick-knob"></div>
+          </div>
+          
+          <div class="joystick-values">
+            <div class="value-display">X: <span id="joy-x">0</span></div>
+            <div class="value-display">Y: <span id="joy-y">0</span></div>
+          </div>
+          
+          <div class="mode-selector">
+            <button class="mode-btn active" onclick="setJoystickMode('drive')" data-mode="drive">🚗 Езда</button>
+            <button class="mode-btn" onclick="setJoystickMode('servo')" data-mode="servo">🔧 Серво</button>
+            <button class="mode-btn" onclick="setJoystickMode('mixed')" data-mode="mixed">🎯 Микс</button>
+          </div>
+        </div>
+        
+        <!-- Правая панель: Статус моторов -->
+        <div class="joystick-panel">
+          <h2>📊 Статус моторов</h2>
+          
+          <div class="motor-status-grid">
+            <div class="motor-status-item">
+              <h4>Motor A</h4>
+              <div class="motor-status-value" id="joy-motorA">0</div>
+            </div>
+            <div class="motor-status-item">
+              <h4>Motor B</h4>
+              <div class="motor-status-value" id="joy-motorB">0</div>
+            </div>
+            <div class="motor-status-item">
+              <h4>Motor C</h4>
+              <div class="motor-status-value" id="joy-motorC">0</div>
+            </div>
+            <div class="motor-status-item">
+              <h4>Motor D</h4>
+              <div class="motor-status-value" id="joy-motorD">0</div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; text-align: center;">
+            <button class="btn-stop-all" onclick="stopAllMotorsFromJoystick()" style="padding: 15px 40px; font-size: 18px;">🛑 СТОП</button>
+          </div>
+          
+          <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+            <h4 style="color: #00d9ff; margin-bottom: 10px;">💡 Подсказки:</h4>
+            <ul style="color: #aaa; font-size: 14px; line-height: 1.8; padding-left: 20px;">
+              <li>Перемещайте джойстик для управления</li>
+              <li>Режим "Езда" - танковое управление</li>
+              <li>Режим "Серво" - управление сервоприводами</li>
+              <li>Режим "Микс" - одновременное управление</li>
+              <li>Кнопка "СТОП" останавливает все моторы</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
   </div>
 
+  <script src="joystick.js"></script>
   <script>
     const API_BASE = window.location.origin;
+
+    // ===== Переключение закладок =====
+    function switchTab(tabName) {
+      // Скрываем все закладки
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Убираем активный класс у кнопок
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Показываем нужную закладку
+      document.getElementById('tab-' + tabName).classList.add('active');
+      
+      // Подсвечиваем кнопку
+      event.target.classList.add('active');
+      
+      // Если переключились на джойстик - инициализируем
+      if (tabName === 'joystick') {
+        initJoystick();
+      }
+    }
 
     // Обновление отображения значения сервопривода
     function updateServoValue(id, value) {
@@ -889,6 +1158,150 @@
       // Периодическое обновление статуса
       setInterval(loadStatus, 5000);
     };
+
+    // ===== Функции джойстика =====
+    let joystickInterval = null;
+    let currentJoystickMode = 'drive';
+    let joystickUpdateCounter = 0;
+
+    function initJoystick() {
+      const joystick = document.getElementById('joystick');
+      const knob = document.getElementById('joystick-knob');
+      let isDragging = false;
+      const maxRadius = 70; // Максимальное отклонение джойстика
+
+      // Обработка мыши
+      knob.addEventListener('mousedown', startDrag);
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', endDrag);
+
+      // Обработка touch
+      knob.addEventListener('touchstart', startDrag);
+      document.addEventListener('touchmove', drag);
+      document.addEventListener('touchend', endDrag);
+
+      function startDrag(e) {
+        isDragging = true;
+        knob.style.transition = 'none';
+      }
+
+      function drag(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const rect = joystick.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        let clientX, clientY;
+        if (e.touches) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Ограничиваем движение кругом
+        if (distance > maxRadius) {
+          const angle = Math.atan2(dy, dx);
+          dx = Math.cos(angle) * maxRadius;
+          dy = Math.sin(angle) * maxRadius;
+        }
+
+        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+        // Преобразуем в значения -100...100
+        const x = Math.round((dx / maxRadius) * 100);
+        const y = Math.round(-(dy / maxRadius) * 100); // Инвертируем Y
+
+        updateJoystickDisplay(x, y);
+        updateJoystickControl(x, y);
+      }
+
+      function endDrag() {
+        isDragging = false;
+        knob.style.transition = 'box-shadow 0.2s, transform 0.3s';
+        knob.style.transform = 'translate(-50%, -50%)';
+        updateJoystickDisplay(0, 0);
+        stopMotorsSmooth();
+      }
+    }
+
+    function updateJoystickDisplay(x, y) {
+      document.getElementById('joy-x').textContent = x;
+      document.getElementById('joy-y').textContent = y;
+    }
+
+    function updateJoystickControl(x, y) {
+      joystickUpdateCounter++;
+      
+      // Обновляем не каждый кадр для производительности
+      if (joystickUpdateCounter % 3 !== 0) return;
+
+      if (currentJoystickMode === 'drive') {
+        const motors = calculateTankDrive(x, y);
+        sendMotorCommand(motors);
+        updateMotorStatusDisplay(motors);
+      } else if (currentJoystickMode === 'servo') {
+        // Управление сервоприводами
+        // Можно добавить логику управления серво
+      } else if (currentJoystickMode === 'mixed') {
+        const result = calculateMixedControl(x, y, false);
+        sendMotorCommand(result.motors);
+        updateMotorStatusDisplay(result.motors);
+      }
+    }
+
+    function sendMotorCommand(motors) {
+      fetch(API_BASE + '/api/motor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(motors)
+      }).catch(err => console.error('Error:', err));
+    }
+
+    function updateMotorStatusDisplay(motors) {
+      document.getElementById('joy-motorA').textContent = motors.motorA;
+      document.getElementById('joy-motorB').textContent = motors.motorB;
+      document.getElementById('joy-motorC').textContent = motors.motorC;
+      document.getElementById('joy-motorD').textContent = motors.motorD;
+    }
+
+    function setJoystickMode(mode) {
+      currentJoystickMode = mode;
+      
+      // Обновляем активную кнопку
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+      
+      showMessage('Режим: ' + mode, 'success');
+    }
+
+    function stopAllMotorsFromJoystick() {
+      stopAllMotors();
+      document.getElementById('joy-motorA').textContent = '0';
+      document.getElementById('joy-motorB').textContent = '0';
+      document.getElementById('joy-motorC').textContent = '0';
+      document.getElementById('joy-motorD').textContent = '0';
+      document.getElementById('joy-x').textContent = '0';
+      document.getElementById('joy-y').textContent = '0';
+    }
+
+    function stopMotorsSmooth() {
+      sendMotorCommand({
+        motorA: 0,
+        motorB: 0,
+        motorC: 0,
+        motorD: 0
+      });
+    }
   </script>
 </body>
 </html>
