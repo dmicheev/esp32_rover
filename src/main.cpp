@@ -15,7 +15,7 @@ void setup() {
   Serial.println("   ESP32-S3 Robot Controller v2.0");
   Serial.println("========================================\n");
 
-  
+  unsigned long totalStart = millis();
 
   // Инициализация файловой системы LittleFS
   ui_init();
@@ -33,6 +33,9 @@ void setup() {
   setup_dc();
 
   Serial.println("\n✓ All systems initialized");
+  Serial.print("Total initialization took ");
+  Serial.print(millis() - totalStart);
+  Serial.println(" ms");
   Serial.println("========================================\n");
 }
 

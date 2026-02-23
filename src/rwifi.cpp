@@ -10,32 +10,37 @@ static bool wifiConnected = false;
 
 void wifi_init() {
   Serial.println("\n=== WiFi Initialization ===");
+  unsigned long start = millis();
 
   // Отключаем режим модемы для экономии энергии
   //WiFi.setSleep(false);
 
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); // Запускаем процесс подключения [citation:1][citation:2][citation:4]
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // Цикл ожидания подключения
-  while (WiFi.status() != WL_CONNECTED) { // Проверяем статус [citation:1][citation:2][citation:4]
-    delay(500); // Ждем полсекунды [citation:1][citation:2][citation:4]
-    Serial.print("."); // Печатаем точки, чтобы видеть процесс [citation:1][citation:2][citation:4]
+  // Устанавливаем таймаут 10 секунд вместо бесконечного ожидания
+  unsigned long timeout = 10000;  // 10 секунд
+  unsigned long startTime = millis();
+  
+  while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < timeout) {
+    delay(500);
+    Serial.print(".");
   }
 
-  Serial.println("Access Point created successfully!");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected successfully!");
+    Serial.print("AP IP address: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("AP MAC address: ");
+    Serial.println(WiFi.macAddress());
+    wifiConnected = true;
+  } else {
+    Serial.println("\nWiFi connection timeout!");
+    Serial.println("Robot will work in AP mode...");
+  }
 
-  // Ждём присвоения IP адреса
-  delay(100);
-
-
-  Serial.print("AP IP address: ");
-  Serial.println(WiFi.localIP());
-
-  Serial.print("AP MAC address: ");
-  Serial.println(WiFi.macAddress());
-
-  wifiConnected = true;
-
+  Serial.print("WiFi initialization took ");
+  Serial.print(millis() - start);
+  Serial.println(" ms");
   Serial.println("===========================\n");
 }
 

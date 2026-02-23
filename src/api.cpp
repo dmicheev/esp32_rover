@@ -311,10 +311,7 @@ void handleStopMotors() {
 // GET / - главная страница UI
 void handleRoot() {
   api_log("GET / (HTML page)");
-
-  String html = getUIHTML();
-  sendHTMLResponse(html);
-  html = String(); // Освобождаем память
+  ui_serveIndex(server);
 }
 
 // GET /joystick.js - скрипт джойстика
