@@ -23,6 +23,8 @@ let joystickState = {
 
 /**
  * Танковое управление (дифференциальное)
+ * Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
+ * Левые моторы: B, C | Правые моторы: A, D
  * @param {number} x - Положение джойстика по X
  * @param {number} y - Положение джойстика по Y
  * @returns {Object} Скорости моторов {motorA, motorB, motorC, motorD}
@@ -31,17 +33,17 @@ function calculateTankDrive(x, y) {
   // Нормализуем значения
   const throttle = y / 100;  // Газ/тормоз (-1...1)
   const steering = x / 100;   // Поворот (-1...1)
-  
-  // Левые моторы (A, C)
+
+  // Левые моторы (B, C)
   const leftSpeed = (throttle - steering) * JOYSTICK_CONFIG.maxSpeed;
-  // Правые моторы (B, D)
+  // Правые моторы (A, D)
   const rightSpeed = (throttle + steering) * JOYSTICK_CONFIG.maxSpeed;
-  
+
   return {
-    motorA: Math.round(constrain(leftSpeed, -255, 255)),
-    motorB: Math.round(constrain(rightSpeed, -255, 255)),
-    motorC: Math.round(constrain(leftSpeed, -255, 255)),
-    motorD: Math.round(constrain(rightSpeed, -255, 255))
+    motorA: Math.round(constrain(rightSpeed, -255, 255)),  // Правый
+    motorB: Math.round(constrain(leftSpeed, -255, 255)),   // Левый
+    motorC: Math.round(constrain(leftSpeed, -255, 255)),   // Левый
+    motorD: Math.round(constrain(rightSpeed, -255, 255))   // Правый
   };
 }
 

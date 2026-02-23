@@ -310,10 +310,15 @@ void handleStopMotors() {
 // GET / - главная страница UI
 void handleRoot() {
   api_log("GET / (HTML page)");
-  
+
   String html = getUIHTML();
   sendHTMLResponse(html);
   html = String(); // Освобождаем память
+}
+
+// GET /joystick.js - скрипт джойстика
+void handleJoystickJS() {
+  ui_serveStaticFile(server, "/joystick.js", "application/javascript");
 }
 
 // OPTIONS запрос для CORS preflight
@@ -346,6 +351,7 @@ void api_init() {
 
   // Маршруты UI
   server.on("/", HTTP_GET, handleRoot);
+  server.on("/joystick.js", HTTP_GET, handleJoystickJS);
 
   // OTA маршруты
   apiota_init(server);

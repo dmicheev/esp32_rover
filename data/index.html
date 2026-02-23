@@ -1182,7 +1182,20 @@
     // ===== Функции джойстика =====
     let joystickInterval = null;
     let currentJoystickMode = 'drive';
-    let joystickUpdateCounter = 0;
+    let lastMotorCommand = null;
+    let lastSendTime = 0;
+    const SEND_INTERVAL = 100; // Минимальный интервал между отправками (мс)
+    
+    // Состояние сервоприводов для режима servo
+    // Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
+    // Левые: 0, 3 | Правые: 1, 2
+    let servoAngles = {
+      servo0: 90,  // Мотор B - левый
+      servo1: 90,  // Мотор A - правый
+      servo2: 90,  // Мотор D - правый
+      servo3: 90   // Мотор C - левый
+    };
+    let lastServoCommand = null;
 
     function initJoystick() {
       const joystick = document.getElementById('joystick');
@@ -1203,6 +1216,7 @@
       function startDrag(e) {
         isDragging = true;
         knob.style.transition = 'none';
+        console.log('[Joystick] Drag started');
       }
 
       function drag(e) {
@@ -1248,6 +1262,7 @@
         knob.style.transition = 'box-shadow 0.2s, transform 0.3s';
         knob.style.transform = 'translate(-50%, -50%)';
         updateJoystickDisplay(0, 0);
+        console.log('[Joystick] Drag ended - stopping motors');
         stopMotorsSmooth();
       }
     }
@@ -1258,31 +1273,145 @@
     }
 
     function updateJoystickControl(x, y) {
-      joystickUpdateCounter++;
-      
-      // Обновляем не каждый кадр для производительности
-      if (joystickUpdateCounter % 3 !== 0) return;
+      const now = Date.now();
+
+      // Ограничиваем частоту отправок для производительности
+      if (now - lastSendTime < SEND_INTERVAL) return;
 
       if (currentJoystickMode === 'drive') {
         const motors = calculateTankDrive(x, y);
         sendMotorCommand(motors);
         updateMotorStatusDisplay(motors);
+        lastMotorCommand = motors;
       } else if (currentJoystickMode === 'servo') {
-        // Управление сервоприводами
-        // Можно добавить логику управления серво
+        // Управление сервоприводами от джойстика
+        // Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
+        // Левые: 0, 3 | Правые: 1, 2
+        // X - поворот влево/вправо (левые и правые серво в противоположных направлениях)
+        // Y - наклон вперёд/назад (все серво в одном направлении)
+        const servoDelta = 3; // Шаг изменения угла
+        
+        if (Math.abs(x) > 10) {
+          // Поворот: левые и правые серво в противоположных направлениях
+          const leftDir = x > 0 ? -servoDelta : servoDelta;   // Левые (0, 3)
+          const rightDir = x > 0 ? servoDelta : -servoDelta;  // Правые (1, 2)
+          
+          servoAngles.servo0 = constrain(servoAngles.servo0 + leftDir, 0, 180);   // B левый
+          servoAngles.servo3 = constrain(servoAngles.servo3 + leftDir, 0, 180);   // C левый
+          servoAngles.servo1 = constrain(servoAngles.servo1 + rightDir, 0, 180);  // A правый
+          servoAngles.servo2 = constrain(servoAngles.servo2 + rightDir, 0, 180);  // D правый
+        }
+        
+        if (Math.abs(y) > 10) {
+          // Наклон: все серво в одном направлении
+          const tiltDir = y > 0 ? -servoDelta : servoDelta;
+          
+          servoAngles.servo0 = constrain(servoAngles.servo0 + tiltDir, 0, 180);   // B левый
+          servoAngles.servo3 = constrain(servoAngles.servo3 + tiltDir, 0, 180);   // C левый
+          servoAngles.servo1 = constrain(servoAngles.servo1 + tiltDir, 0, 180);   // A правый
+          servoAngles.servo2 = constrain(servoAngles.servo2 + tiltDir, 0, 180);   // D правый
+        }
+        
+        // Отправляем команды только если изменились
+        const servoCommand = {
+          s0: servoAngles.servo0,
+          s1: servoAngles.servo1,
+          s2: servoAngles.servo2,
+          s3: servoAngles.servo3
+        };
+        
+        if (JSON.stringify(servoCommand) !== JSON.stringify(lastServoCommand)) {
+          sendServoCommand(servoCommand);
+          lastServoCommand = servoCommand;
+        }
+        
+        // Обновляем отображение
+        document.getElementById('joy-motorA').textContent = 'S0:' + servoAngles.servo0;
+        document.getElementById('joy-motorB').textContent = 'S1:' + servoAngles.servo1;
+        document.getElementById('joy-motorC').textContent = 'S2:' + servoAngles.servo2;
+        document.getElementById('joy-motorD').textContent = 'S3:' + servoAngles.servo3;
+        
       } else if (currentJoystickMode === 'mixed') {
         const result = calculateMixedControl(x, y, false);
-        sendMotorCommand(result.motors);
-        updateMotorStatusDisplay(result.motors);
+        const motors = result.motors;
+        sendMotorCommand(motors);
+        updateMotorStatusDisplay(motors);
+        lastMotorCommand = motors;
       }
+      
+      lastSendTime = now;
     }
 
     function sendMotorCommand(motors) {
+      console.log('[Joystick] API request:', motors);
       fetch(API_BASE + '/api/motor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(motors)
-      }).catch(err => console.error('Error:', err));
+      })
+      .then(response => {
+        console.log('[Joystick] API response status:', response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log('[Joystick] API response:', data);
+      })
+      .catch(err => {
+        console.error('[Joystick] API error:', err);
+      });
+    }
+    
+    // Отправка команды сервоприводам
+    function sendServoCommand(servoCommand) {
+      console.log('[Joystick Servo] Sending:', servoCommand);
+      
+      // Отправляем команды для каждого сервопривода отдельно
+      const promises = [];
+      
+      if (servoCommand.s0 !== undefined) {
+        promises.push(
+          fetch(API_BASE + '/api/servo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 0, angle: servoCommand.s0 })
+          }).then(r => r.json())
+        );
+      }
+      if (servoCommand.s1 !== undefined) {
+        promises.push(
+          fetch(API_BASE + '/api/servo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 1, angle: servoCommand.s1 })
+          }).then(r => r.json())
+        );
+      }
+      if (servoCommand.s2 !== undefined) {
+        promises.push(
+          fetch(API_BASE + '/api/servo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 2, angle: servoCommand.s2 })
+          }).then(r => r.json())
+        );
+      }
+      if (servoCommand.s3 !== undefined) {
+        promises.push(
+          fetch(API_BASE + '/api/servo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 3, angle: servoCommand.s3 })
+          }).then(r => r.json())
+        );
+      }
+      
+      Promise.all(promises)
+        .then(results => {
+          console.log('[Joystick Servo] Results:', results);
+        })
+        .catch(err => {
+          console.error('[Joystick Servo] Error:', err);
+        });
     }
 
     function updateMotorStatusDisplay(motors) {
@@ -1321,6 +1450,11 @@
         motorC: 0,
         motorD: 0
       });
+    }
+    
+    // Функция ограничения значения (constrain)
+    function constrain(value, min, max) {
+      return Math.max(min, Math.min(max, value));
     }
   </script>
 </body>
