@@ -180,6 +180,68 @@
       margin: 5px 0;
     }
 
+    /* ===== Визуализация ровера ===== */
+    .rover-visualizer {
+      margin: 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .rover-svg {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 217, 255, 0.2);
+    }
+
+    .wheel {
+      transition: transform 0.1s ease;
+    }
+
+    .wheel-spoke {
+      transition: transform 0.1s ease;
+    }
+
+    /* Анимация вращения колёс */
+    @keyframes wheel-rotate-forward {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes wheel-rotate-backward {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(-360deg); }
+    }
+
+    .wheel-spinning-forward {
+      animation: wheel-rotate-forward 0.5s linear infinite;
+    }
+
+    .wheel-spinning-backward {
+      animation: wheel-rotate-backward 0.5s linear infinite;
+    }
+
+    /* Индикаторы активности */
+    .wheel-active-left {
+      fill: rgba(255, 107, 107, 0.6) !important;
+      stroke: #ff6b6b !important;
+      filter: drop-shadow(0 0 5px #ff6b6b);
+    }
+
+    .wheel-active-right {
+      fill: rgba(0, 255, 136, 0.6) !important;
+      stroke: #00ff88 !important;
+      filter: drop-shadow(0 0 5px #00ff88);
+    }
+
+    .servo-active {
+      fill: rgba(255, 204, 0, 0.8) !important;
+      stroke: #ffcc00 !important;
+      filter: drop-shadow(0 0 8px #ffcc00);
+    }
+
     .mode-selector {
       display: flex;
       gap: 10px;
@@ -840,9 +902,137 @@
           </div>
         </div>
         
-        <!-- Правая панель: Статус моторов -->
+        <!-- Правая панель: Статус моторов + Визуализация -->
         <div class="joystick-panel">
           <h2>📊 Статус моторов</h2>
+          
+          <!-- Визуализация ровера -->
+          <div class="rover-visualizer">
+            <svg viewBox="0 0 300 400" class="rover-svg">
+              <!-- Корпус ровера -->
+              <rect x="75" y="150" width="150" height="100" rx="10" 
+                    fill="rgba(0, 217, 255, 0.2)" 
+                    stroke="#00d9ff" 
+                    stroke-width="2"/>
+              
+              <!-- Метка переда -->
+              <polygon points="150,140 140,155 160,155" 
+                       fill="#00ff88"/>
+              <text x="150" y="135" text-anchor="middle" 
+                    fill="#00ff88" font-size="12">▲</text>
+              
+              <!-- Левые колёса (B, C) -->
+              <!-- Колесо B (переднее левое) -->
+              <g id="wheel-b" transform="translate(60, 180)">
+                <ellipse cx="0" cy="0" rx="25" ry="15" 
+                         fill="rgba(255, 107, 107, 0.3)" 
+                         stroke="#ff6b6b" 
+                         stroke-width="2"
+                         class="wheel"/>
+                <line x1="-20" y1="0" x2="20" y2="0" 
+                      stroke="#ff6b6b" 
+                      stroke-width="3"
+                      class="wheel-spoke"/>
+                <text x="-35" y="4" fill="#ff6b6b" font-size="10" font-weight="bold">B</text>
+              </g>
+              
+              <!-- Колесо C (заднее левое) -->
+              <g id="wheel-c" transform="translate(60, 220)">
+                <ellipse cx="0" cy="0" rx="25" ry="15" 
+                         fill="rgba(255, 107, 107, 0.3)" 
+                         stroke="#ff6b6b" 
+                         stroke-width="2"
+                         class="wheel"/>
+                <line x1="-20" y1="0" x2="20" y2="0" 
+                      stroke="#ff6b6b" 
+                      stroke-width="3"
+                      class="wheel-spoke"/>
+                <text x="-35" y="4" fill="#ff6b6b" font-size="10" font-weight="bold">C</text>
+              </g>
+              
+              <!-- Правые колёса (A, D) -->
+              <!-- Колесо A (переднее правое) -->
+              <g id="wheel-a" transform="translate(240, 180)">
+                <ellipse cx="0" cy="0" rx="25" ry="15" 
+                         fill="rgba(0, 255, 136, 0.3)" 
+                         stroke="#00ff88" 
+                         stroke-width="2"
+                         class="wheel"/>
+                <line x1="-20" y1="0" x2="20" y2="0" 
+                      stroke="#00ff88" 
+                      stroke-width="3"
+                      class="wheel-spoke"/>
+                <text x="40" y="4" fill="#00ff88" font-size="10" font-weight="bold">A</text>
+              </g>
+              
+              <!-- Колесо D (заднее правое) -->
+              <g id="wheel-d" transform="translate(240, 220)">
+                <ellipse cx="0" cy="0" rx="25" ry="15" 
+                         fill="rgba(0, 255, 136, 0.3)" 
+                         stroke="#00ff88" 
+                         stroke-width="2"
+                         class="wheel"/>
+                <line x1="-20" y1="0" x2="20" y2="0" 
+                      stroke="#00ff88" 
+                      stroke-width="3"
+                      class="wheel-spoke"/>
+                <text x="40" y="4" fill="#00ff88" font-size="10" font-weight="bold">D</text>
+              </g>
+              
+              <!-- Сервоприводы (маленькие кружки) -->
+              <!-- Серво 0 (мотор B) -->
+              <circle id="servo-0" cx="80" cy="170" r="8" 
+                      fill="rgba(255, 204, 0, 0.5)" 
+                      stroke="#ffcc00" 
+                      stroke-width="2"/>
+              <text x="80" y="174" text-anchor="middle" 
+                    fill="#ffcc00" font-size="8" font-weight="bold">S0</text>
+              
+              <!-- Серво 1 (мотор A) -->
+              <circle id="servo-1" cx="220" cy="170" r="8" 
+                      fill="rgba(255, 204, 0, 0.5)" 
+                      stroke="#ffcc00" 
+                      stroke-width="2"/>
+              <text x="220" y="174" text-anchor="middle" 
+                    fill="#ffcc00" font-size="8" font-weight="bold">S1</text>
+              
+              <!-- Серво 2 (мотор D) -->
+              <circle id="servo-2" cx="220" cy="230" r="8" 
+                      fill="rgba(255, 204, 0, 0.5)" 
+                      stroke="#ffcc00" 
+                      stroke-width="2"/>
+              <text x="220" y="234" text-anchor="middle" 
+                    fill="#ffcc00" font-size="8" font-weight="bold">S2</text>
+              
+              <!-- Серво 3 (мотор C) -->
+              <circle id="servo-3" cx="80" cy="230" r="8" 
+                      fill="rgba(255, 204, 0, 0.5)" 
+                      stroke="#ffcc00" 
+                      stroke-width="2"/>
+              <text x="80" y="234" text-anchor="middle" 
+                    fill="#ffcc00" font-size="8" font-weight="bold">S3</text>
+              
+              <!-- Индикаторы скорости -->
+              <g id="speed-indicators" transform="translate(150, 280)">
+                <text x="0" y="0" text-anchor="middle" 
+                      fill="#aaa" font-size="10">Скорость:</text>
+                <text x="-60" y="20" text-anchor="middle" 
+                      fill="#ff6b6b" font-size="9">Левые: <tspan id="speed-left">0</tspan></text>
+                <text x="60" y="20" text-anchor="middle" 
+                      fill="#00ff88" font-size="9">Правые: <tspan id="speed-right">0</tspan></text>
+              </g>
+              
+              <!-- Индикаторы угла серво -->
+              <g id="servo-indicators" transform="translate(150, 320)">
+                <text x="0" y="0" text-anchor="middle" 
+                      fill="#aaa" font-size="10">Серво:</text>
+                <text x="-60" y="20" text-anchor="middle" 
+                      fill="#ffcc00" font-size="9">Левые: <tspan id="servo-left">90</tspan>°</text>
+                <text x="60" y="20" text-anchor="middle" 
+                      fill="#ffcc00" font-size="9">Правые: <tspan id="servo-right">90</tspan>°</text>
+              </g>
+            </svg>
+          </div>
           
           <div class="motor-status-grid">
             <div class="motor-status-item">
@@ -862,11 +1052,11 @@
               <div class="motor-status-value" id="joy-motorD">0</div>
             </div>
           </div>
-          
+
           <div style="margin-top: 30px; text-align: center;">
             <button class="btn-stop-all" onclick="stopAllMotorsFromJoystick()" style="padding: 15px 40px; font-size: 18px;">🛑 СТОП</button>
           </div>
-          
+
           <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
             <h4 style="color: #00d9ff; margin-bottom: 10px;">💡 Подсказки:</h4>
             <ul style="color: #aaa; font-size: 14px; line-height: 1.8; padding-left: 20px;">
@@ -1324,13 +1514,16 @@
           sendServoCommand(servoCommand);
           lastServoCommand = servoCommand;
         }
-        
+
         // Обновляем отображение
         document.getElementById('joy-motorA').textContent = 'S0:' + servoAngles.servo0;
         document.getElementById('joy-motorB').textContent = 'S1:' + servoAngles.servo1;
         document.getElementById('joy-motorC').textContent = 'S2:' + servoAngles.servo2;
         document.getElementById('joy-motorD').textContent = 'S3:' + servoAngles.servo3;
-        
+
+        // Обновляем визуализацию сервоприводов
+        updateServoVisualizer(servoAngles);
+
       } else if (currentJoystickMode === 'mixed') {
         const result = calculateMixedControl(x, y, false);
         const motors = result.motors;
@@ -1419,6 +1612,101 @@
       document.getElementById('joy-motorB').textContent = motors.motorB;
       document.getElementById('joy-motorC').textContent = motors.motorC;
       document.getElementById('joy-motorD').textContent = motors.motorD;
+      
+      // Обновляем визуализацию
+      updateRoverVisualizer(motors);
+    }
+
+    // ===== Визуализация ровера =====
+    function updateRoverVisualizer(motors) {
+      // Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
+      // Левые: B, C | Правые: A, D
+      
+      const motorA = motors.motorA || 0;
+      const motorB = motors.motorB || 0;
+      const motorC = motors.motorC || 0;
+      const motorD = motors.motorD || 0;
+      
+      // Обновляем индикаторы скорости
+      const leftSpeed = (motorB + motorC) / 2;
+      const rightSpeed = (motorA + motorD) / 2;
+      
+      document.getElementById('speed-left').textContent = Math.round(leftSpeed);
+      document.getElementById('speed-right').textContent = Math.round(rightSpeed);
+      
+      // Анимация колёс
+      updateWheelAnimation('wheel-a', motorA);
+      updateWheelAnimation('wheel-b', motorB);
+      updateWheelAnimation('wheel-c', motorC);
+      updateWheelAnimation('wheel-d', motorD);
+      
+      // Подсветка активных колёс
+      updateWheelHighlight('wheel-a', motorA, 'right');
+      updateWheelHighlight('wheel-b', motorB, 'left');
+      updateWheelHighlight('wheel-c', motorC, 'left');
+      updateWheelHighlight('wheel-d', motorD, 'right');
+    }
+
+    function updateWheelAnimation(wheelId, speed) {
+      const wheel = document.getElementById(wheelId);
+      const spoke = wheel.querySelector('.wheel-spoke');
+      
+      // Удаляем существующие классы анимации
+      spoke.classList.remove('wheel-spinning-forward', 'wheel-spinning-backward');
+      
+      // Добавляем анимацию если скорость не нулевая
+      if (Math.abs(speed) > 10) {
+        if (speed > 0) {
+          spoke.classList.add('wheel-spinning-forward');
+        } else {
+          spoke.classList.add('wheel-spinning-backward');
+        }
+      }
+    }
+
+    function updateWheelHighlight(wheelId, speed, side) {
+      const wheel = document.getElementById(wheelId);
+      const ellipse = wheel.querySelector('ellipse');
+      
+      // Удаляем существующие классы подсветки
+      ellipse.classList.remove('wheel-active-left', 'wheel-active-right');
+      
+      // Добавляем подсветку если скорость не нулевая
+      if (Math.abs(speed) > 10) {
+        if (side === 'left') {
+          ellipse.classList.add('wheel-active-left');
+        } else {
+          ellipse.classList.add('wheel-active-right');
+        }
+      }
+    }
+
+    // Обновление углов сервоприводов на визуализации
+    function updateServoVisualizer(servoAngles) {
+      // Левые серво: 0 (B), 3 (C)
+      // Правые серво: 1 (A), 2 (D)
+      const leftServo = Math.round((servoAngles.servo0 + servoAngles.servo3) / 2);
+      const rightServo = Math.round((servoAngles.servo1 + servoAngles.servo2) / 2);
+      
+      document.getElementById('servo-left').textContent = leftServo;
+      document.getElementById('servo-right').textContent = rightServo;
+      
+      // Подсветка активных серво
+      updateServoHighlight('servo-0', servoAngles.servo0, 90);
+      updateServoHighlight('servo-1', servoAngles.servo1, 90);
+      updateServoHighlight('servo-2', servoAngles.servo2, 90);
+      updateServoHighlight('servo-3', servoAngles.servo3, 90);
+    }
+
+    function updateServoHighlight(servoId, angle, centerAngle) {
+      const servo = document.getElementById(servoId);
+      
+      // Подсвечиваем если угол отличается от центрального
+      if (Math.abs(angle - centerAngle) > 5) {
+        servo.classList.add('servo-active');
+      } else {
+        servo.classList.remove('servo-active');
+      }
     }
 
     function setJoystickMode(mode) {
