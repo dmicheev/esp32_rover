@@ -1,15 +1,11 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-#include "pins.h" // Убедитесь, что там правильные I2C_SDA и I2C_SCL
+#include "pins.h"
+#include "config.h"
 
 // Максимальное количество сервоприводов (PCA9685 имеет 16 каналов)
 #define MAX_SERVOS 16
-
-// Значения по умолчанию для MG90S
-#define DEFAULT_SERVOMIN 140
-#define DEFAULT_SERVOMAX 480
-
 
 // Создаем объект драйвера PCA9685
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
@@ -24,8 +20,8 @@ struct ServoConfig {
 // Массив с настройками для каждого сервопривода
 ServoConfig servoConfigs[MAX_SERVOS];
 
-// корректировки по результатам коллибровки
-int correction [MAX_SERVOS] = {-5,-13,-8,-20};
+// Корректировки по результатам калибровки
+int correction[MAX_SERVOS] = SERVO_CORRECTION;
 
 // Буфер для приема команд из Serial
 String inputString = "";

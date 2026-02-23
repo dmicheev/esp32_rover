@@ -1,0 +1,28 @@
+/**
+ * Конфигурационный файл (ШАБЛОН)
+ * Скопируйте этот файл в config.h и заполните своими данными
+ * Файл config.h НЕ должен быть в git!
+ */
+
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
+// WiFi настройки
+#define WIFI_SSID "your_wifi_ssid"
+#define WIFI_PASSWORD "your_wifi_password"
+
+// Сервоприводы - коррекция углов (0-3)
+#define SERVO_CORRECTION {-5, -13, -8, -20}
+
+// Сервоприводы - значения по умолчанию
+#define DEFAULT_SERVOMIN 140
+#define DEFAULT_SERVOMAX 480
+
+// HTTP сервер
+#define HTTP_PORT 8080
+
+// Точка доступа (если используется AP режим)
+#define AP_SSID "RobotAP"
+#define AP_PASSWORD "12345678"
+
+#endif

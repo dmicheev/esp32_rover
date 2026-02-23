@@ -1,4 +1,5 @@
 #include "api.h"
+#include "config.h"
 
 #include <Arduino.h>
 
@@ -16,7 +17,7 @@ extern WiFiClass WiFi;
 #include "apiota.h"
 
 // Веб-сервер на порту 8080
-WebServer server(8080);
+WebServer server(HTTP_PORT);
 
 // Флаг включения логирования
 #define API_LOG_ENABLED true
