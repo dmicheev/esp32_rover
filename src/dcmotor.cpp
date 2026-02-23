@@ -6,13 +6,13 @@
 
 
 // Текущие скорости моторов
-static int8_t motorSpeedA = 0;
-static int8_t motorSpeedB = 0;
-static int8_t motorSpeedC = 0;
-static int8_t motorSpeedD = 0;
+static int motorSpeedA = 0;
+static int motorSpeedB = 0;
+static int motorSpeedC = 0;
+static int motorSpeedD = 0;
 
 // Функция установки скорости для одного мотора
-static void setMotorSpeed(int pinA, int pinB, int8_t speed) {
+static void setMotorSpeed(int pinA, int pinB, int speed) {
   speed = constrain(speed, -255, 255);
   
   if (speed > 0) {
@@ -51,6 +51,8 @@ void setup_dc() {
   motor_stopAll();
 
   Serial.println("DC motors initialized (A, B, C, D)");
+
+
 }
 
 void loop_dc() {
@@ -58,47 +60,47 @@ void loop_dc() {
   // Сейчас просто поддерживаем установленные скорости
 }
 
-void motor_setSpeedA(int8_t speed) {
+void motor_setSpeedA(int speed) {
   motorSpeedA = speed;
   setMotorSpeed(A_IA, A_IB, speed);
   Serial.print("Motor A speed: ");
   Serial.println(speed);
 }
 
-void motor_setSpeedB(int8_t speed) {
+void motor_setSpeedB(int speed) {
   motorSpeedB = speed;
   setMotorSpeed(B_IA, B_IB, speed);
   Serial.print("Motor B speed: ");
   Serial.println(speed);
 }
 
-void motor_setSpeedC(int8_t speed) {
+void motor_setSpeedC(int speed) {
   motorSpeedC = speed;
   setMotorSpeed(C_IA, C_IB, speed);
   Serial.print("Motor C speed: ");
   Serial.println(speed);
 }
 
-void motor_setSpeedD(int8_t speed) {
+void motor_setSpeedD(int speed) {
   motorSpeedD = speed;
   setMotorSpeed(D_IA, D_IB, speed);
   Serial.print("Motor D speed: ");
   Serial.println(speed);
 }
 
-int8_t motor_getSpeedA() {
+int motor_getSpeedA() {
   return motorSpeedA;
 }
 
-int8_t motor_getSpeedB() {
+int motor_getSpeedB() {
   return motorSpeedB;
 }
 
-int8_t motor_getSpeedC() {
+int motor_getSpeedC() {
   return motorSpeedC;
 }
 
-int8_t motor_getSpeedD() {
+int motor_getSpeedD() {
   return motorSpeedD;
 }
 
@@ -107,13 +109,16 @@ void motor_stopAll() {
   motorSpeedB = 0;
   motorSpeedC = 0;
   motorSpeedD = 0;
-  analogWrite(A_IA, 0);
-  analogWrite(A_IB, 0);
-  analogWrite(B_IA, 0);
-  analogWrite(B_IB, 0);
-  analogWrite(C_IA, 0);
-  analogWrite(C_IB, 0);
-  analogWrite(D_IA, 0);
-  analogWrite(D_IB, 0);
+  
+  analogWrite(A_IA, LOW);
+  analogWrite(A_IB, LOW);
+  analogWrite(B_IA, LOW);
+  analogWrite(B_IB, LOW);
+  analogWrite(C_IA, LOW);
+  analogWrite(C_IB, LOW);
+  analogWrite(D_IA, LOW);
+  analogWrite(D_IB, LOW);
   Serial.println("All motors stopped (A, B, C, D)");
+
+  
 }
