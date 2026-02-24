@@ -15,7 +15,7 @@
 ### 2. Через API
 
 ```bash
-curl -X POST -F "firmware=@build/esp32-s3-devkitc1-n16r8/firmware.bin" http://<IP-адрес>:8080/api/ota/upload
+curl -X POST -F "firmware=@.pio/build/esp32-s3-devkitc1-n16r8/firmware.bin" http://<IP-адрес>:8080/api/ota/upload
 ```
 
 ## Эндпоинты
@@ -33,14 +33,19 @@ curl -X POST -F "firmware=@build/esp32-s3-devkitc1-n16r8/firmware.bin" http://<I
 # Собрать прошивку
 pio run
 
-# Путь к файлу:
+# Путь к файлу (ИСПОЛЬЗУЙТЕ ТОЛЬКО ЭТОТ ФАЙЛ):
 # .pio/build/esp32-s3-devkitc1-n16r8/firmware.bin
 ```
+
+❌ **НЕ используйте** скрипт `create_ota_bin.sh` - он создает объединенный файл с bootloader и partition table, который не подходит для OTA обновления через библиотеку Update.h.
+
+⚠️ **Важно:** Для OTA обновления используйте только `firmware.bin`. Не используйте объединенный файл с bootloader и partition table - библиотека Update.h автоматически записывает прошивку в правильный раздел OTA.
 
 ### Arduino IDE
 
 1. **Sketch → Export Compiled Binary**
-2. Файл находится в папке проекта
+2. Используйте файл `<имя_проекта>.firmware.bin` (или просто `.bin` без префикса)
+3. Не используйте файлы с `bootloader` в названии
 
 ## Требования
 
@@ -53,8 +58,10 @@ pio run
 | Ошибка | Причина | Решение |
 |--------|---------|---------|
 | `Not enough space` | Файл слишком большой | Очистите память или уменьшите размер прошивки |
-| `Update.begin() failed` | Ошибка инициализации | Перезагрузите устройство |
-| `Update.end() failed` | Ошибка записи | Проверьте целостность .bin файла |
+| `Update.begin() failed` | Ошибка инициализации или неправильный раздел | Перезагрузите устройство, проверьте конфигурацию разделов |
+| `Update.end() failed` | Ошибка записи или неправильный bin файл | Используйте только `firmware.bin`, не объединенный файл |
+| `No OTA partition` | Отсутствует раздел для OTA | Проверьте схему разделов в platformio.ini |
+| `Upload failed` | Неправильный тип файла | Убедитесь, что используете только `firmware.bin` |
 
 ## Безопасность
 

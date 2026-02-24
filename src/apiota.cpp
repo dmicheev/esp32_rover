@@ -11,6 +11,10 @@
 // Глобальная переменная server (объявлена в api.cpp)
 extern WebServer server;
 
+// Глобальный флаг статуса OTA обновления
+static bool otaUpdateSuccess = false;
+static String otaErrorMessage = "";
+
 // Логирование
 void apiota_log(const String& message) {
   Serial.println("[OTA] " + message);
@@ -41,8 +45,11 @@ void handleOtaUpload() {
   HTTPUpload& upload = server.upload();
 
   if (upload.status == UPLOAD_FILE_START) {
+    // Сбрасываем флаги при начале новой загрузки
+    otaUpdateSuccess = false;
+    otaErrorMessage = "";
+    
     apiota_log("OTA Start: " + String(upload.filename.c_str()));
-    apiota_log("File size: " + String(upload.totalSize) + " bytes");
     
     // Получаем информацию о разделе прошивки
     const esp_partition_t* running = esp_ota_get_running_partition();
@@ -50,7 +57,7 @@ void handleOtaUpload() {
     
     if (!update) {
       apiota_log("ERROR: No OTA update partition found");
-      server.send(500, "application/json", "{\"error\":\"No OTA partition\"}");
+      otaErrorMessage = "No OTA partition";
       return;
     }
     
@@ -58,15 +65,15 @@ void handleOtaUpload() {
     apiota_log("Update partition: " + String(update->label) + " @ 0x" + String(update->address, HEX));
     apiota_log("Update partition size: " + String(update->size) + " bytes");
     
-    // Начинаем обновление с размером файла (не раздела!)
-    // Это важно для корректной работы Update.end()
-    if (!Update.begin(upload.totalSize)) {
+    // Начинаем обновление с размером раздела OTA
+    // Используем размер раздела, а не файла, так как upload.totalSize может быть недоступен
+    if (!Update.begin(update->size)) {
       apiota_log("ERROR: Update.begin() failed - " + String(Update.errorString()));
-      server.send(500, "application/json", "{\"error\":\"Update.begin() failed\"}");
+      otaErrorMessage = "Update.begin() failed: " + String(Update.errorString());
       return;
     }
     
-    apiota_log("Update started with file size, free heap: " + String(ESP.getFreeHeap()) + " bytes");
+    apiota_log("Update started with partition size, free heap: " + String(ESP.getFreeHeap()) + " bytes");
   }
   else if (upload.status == UPLOAD_FILE_WRITE) {
     int written = Update.write(upload.buf, upload.currentSize);
@@ -81,7 +88,7 @@ void handleOtaUpload() {
     // Проверяем, что все данные записаны
     if (Update.hasError()) {
       apiota_log("ERROR: Update has errors before end - " + String(Update.errorString()));
-      server.send(500, "application/json", "{\"error\":\"Write error\"}");
+      otaErrorMessage = "Write error: " + String(Update.errorString());
       return;
     }
     
@@ -90,10 +97,7 @@ void handleOtaUpload() {
     if (Update.end(false)) {  // false = отключаем проверку подписи
       apiota_log("OTA Success: " + String(upload.totalSize) + " bytes");
       apiota_log("Firmware MD5: " + String(Update.md5String()));
-      server.sendHeader("Connection", "close");
-      server.send(200, "application/json", "{\"success\":true,\"message\":\"Firmware uploaded successfully. Rebooting...\"}");
-      delay(1000);
-      ESP.restart();
+      otaUpdateSuccess = true;
     } else {
       apiota_log("ERROR: Update.end() failed - " + String(Update.errorString()));
       apiota_log("Error code: " + String(Update.getError()));
@@ -104,13 +108,30 @@ void handleOtaUpload() {
       apiota_log("Update partition address: 0x" + String(update->address, HEX));
       apiota_log("Update partition size: " + String(update->size));
       
-      server.send(500, "application/json", "{\"error\":\"Update.end() failed: " + String(Update.errorString()) + "\"}");
+      otaErrorMessage = "Update.end() failed: " + String(Update.errorString());
     }
+  }
+}
+
+// Обработчик ответа после загрузки (вызывается после handleOtaUpload)
+void handleOtaUploadResponse() {
+  if (otaUpdateSuccess) {
+    apiota_log("OTA update successful, sending response and rebooting...");
+    server.sendHeader("Connection", "close");
+    server.send(200, "application/json", "{\"success\":true,\"message\":\"Firmware uploaded successfully. Rebooting...\"}");
+    delay(1000);
+    ESP.restart();
+  } else if (otaErrorMessage.length() > 0) {
+    apiota_log("OTA update failed: " + otaErrorMessage);
+    server.send(500, "application/json", "{\"error\":\"" + otaErrorMessage + "\"}");
+  } else {
+    apiota_log("OTA update failed with unknown error");
+    server.send(500, "application/json", "{\"error\":\"Unknown OTA error\"}");
   }
 }
 
 // Инициализация OTA маршрутов
 void apiota_init(WebServer& server) {
   server.on("/api/ota", HTTP_GET, handleOtaPage);
-  server.on("/api/ota/upload", HTTP_POST, handleOtaUpload);
+  server.on("/api/ota/upload", HTTP_POST, handleOtaUploadResponse, handleOtaUpload);
 }
