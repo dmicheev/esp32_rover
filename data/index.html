@@ -189,7 +189,7 @@
 
     .rover-svg {
       width: 100%;
-      max-width: 300px;
+      max-width: 260px;
       height: auto;
       background: rgba(0, 0, 0, 0.2);
       border-radius: 10px;
@@ -197,43 +197,30 @@
     }
 
     .wheel {
-      transition: transform 0.1s ease;
+      transition: all 0.1s ease;
     }
 
-    .wheel-spoke {
-      transition: transform 0.1s ease;
+    /* Стрелка сервопривода */
+    .servo-arrow {
+      transition: transform 0.15s ease-out;
     }
 
-    /* Анимация вращения колёс */
-    @keyframes wheel-rotate-forward {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes wheel-rotate-backward {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(-360deg); }
-    }
-
-    .wheel-spinning-forward {
-      animation: wheel-rotate-forward 0.5s linear infinite;
-    }
-
-    .wheel-spinning-backward {
-      animation: wheel-rotate-backward 0.5s linear infinite;
+    /* Стрелка скорости */
+    .speed-arrow-line {
+      transition: all 0.1s ease-out;
     }
 
     /* Индикаторы активности */
     .wheel-active-left {
-      fill: rgba(255, 107, 107, 0.6) !important;
+      fill: rgba(255, 107, 107, 0.5) !important;
       stroke: #ff6b6b !important;
-      filter: drop-shadow(0 0 5px #ff6b6b);
+      filter: drop-shadow(0 0 8px #ff6b6b);
     }
 
     .wheel-active-right {
-      fill: rgba(0, 255, 136, 0.6) !important;
+      fill: rgba(0, 255, 136, 0.5) !important;
       stroke: #00ff88 !important;
-      filter: drop-shadow(0 0 5px #00ff88);
+      filter: drop-shadow(0 0 8px #00ff88);
     }
 
     .servo-active {
@@ -908,129 +895,167 @@
           
           <!-- Визуализация ровера -->
           <div class="rover-visualizer">
-            <svg viewBox="0 0 300 400" class="rover-svg">
+            <svg viewBox="0 0 260 380" class="rover-svg">
               <!-- Корпус ровера -->
-              <rect x="75" y="150" width="150" height="100" rx="10" 
-                    fill="rgba(0, 217, 255, 0.2)" 
+              <rect x="105" y="160" width="50" height="80" rx="8" 
+                    fill="rgba(0, 217, 255, 0.15)" 
                     stroke="#00d9ff" 
                     stroke-width="2"/>
               
               <!-- Метка переда -->
-              <polygon points="150,140 140,155 160,155" 
+              <polygon points="130,145 125,155 135,155" 
                        fill="#00ff88"/>
-              <text x="150" y="135" text-anchor="middle" 
-                    fill="#00ff88" font-size="12">▲</text>
+              <text x="130" y="140" text-anchor="middle" 
+                    fill="#00ff88" font-size="14" font-weight="bold">▲</text>
               
               <!-- Левые колёса (B, C) -->
               <!-- Колесо B (переднее левое) -->
-              <g id="wheel-b" transform="translate(60, 180)">
-                <ellipse cx="0" cy="0" rx="25" ry="15" 
-                         fill="rgba(255, 107, 107, 0.3)" 
+              <g id="wheel-b" transform="translate(70, 170)">
+                <!-- Колесо -->
+                <ellipse cx="0" cy="0" rx="18" ry="22" 
+                         fill="rgba(255, 107, 107, 0.2)" 
                          stroke="#ff6b6b" 
                          stroke-width="2"
                          class="wheel"/>
-                <line x1="-20" y1="0" x2="20" y2="0" 
-                      stroke="#ff6b6b" 
-                      stroke-width="3"
-                      class="wheel-spoke"/>
-                <text x="-35" y="4" fill="#ff6b6b" font-size="10" font-weight="bold">B</text>
+                <!-- Стрелка поворота серво (угол) -->
+                <!-- Повёрнута на -90° чтобы 90° = стрелка вверх (вперёд) -->
+                <g class="servo-arrow" transform="rotate(-90)">
+                  <line x1="0" y1="0" x2="18" y2="0" 
+                        stroke="#ffcc00" 
+                        stroke-width="3"
+                        stroke-linecap="round"/>
+                  <polygon points="18,-4 22,0 18,4" 
+                           fill="#ffcc00"/>
+                  <text x="-14" y="4" fill="#ffcc00" font-size="8" font-weight="bold" class="servo-angle-text">90°</text>
+                </g>
+                <!-- Толстая стрелка скорости (слева от колеса) -->
+                <g class="speed-arrow" transform="translate(-35, 0)">
+                  <line x1="0" y1="0" x2="0" y2="0" 
+                        stroke="#ff6b6b" 
+                        stroke-width="6"
+                        stroke-linecap="round"
+                        class="speed-arrow-line"/>
+                  <text x="0" y="-4" text-anchor="middle" 
+                        fill="#ff6b6b" font-size="9" font-weight="bold" class="speed-text">0</text>
+                </g>
+                <!-- Метка -->
+                <text x="-50" y="4" fill="#ff6b6b" font-size="11" font-weight="bold">B</text>
               </g>
               
               <!-- Колесо C (заднее левое) -->
-              <g id="wheel-c" transform="translate(60, 220)">
-                <ellipse cx="0" cy="0" rx="25" ry="15" 
-                         fill="rgba(255, 107, 107, 0.3)" 
+              <g id="wheel-c" transform="translate(70, 225)">
+                <ellipse cx="0" cy="0" rx="18" ry="22" 
+                         fill="rgba(255, 107, 107, 0.2)" 
                          stroke="#ff6b6b" 
                          stroke-width="2"
                          class="wheel"/>
-                <line x1="-20" y1="0" x2="20" y2="0" 
-                      stroke="#ff6b6b" 
-                      stroke-width="3"
-                      class="wheel-spoke"/>
-                <text x="-35" y="4" fill="#ff6b6b" font-size="10" font-weight="bold">C</text>
+                <g class="servo-arrow" transform="rotate(-90)">
+                  <line x1="0" y1="0" x2="18" y2="0" 
+                        stroke="#ffcc00" 
+                        stroke-width="3"
+                        stroke-linecap="round"/>
+                  <polygon points="18,-4 22,0 18,4" 
+                           fill="#ffcc00"/>
+                  <text x="-14" y="4" fill="#ffcc00" font-size="8" font-weight="bold" class="servo-angle-text">90°</text>
+                </g>
+                <g class="speed-arrow" transform="translate(-35, 0)">
+                  <line x1="0" y1="0" x2="0" y2="0" 
+                        stroke="#ff6b6b" 
+                        stroke-width="6"
+                        stroke-linecap="round"
+                        class="speed-arrow-line"/>
+                  <text x="0" y="-4" text-anchor="middle" 
+                        fill="#ff6b6b" font-size="9" font-weight="bold" class="speed-text">0</text>
+                </g>
+                <text x="-50" y="4" fill="#ff6b6b" font-size="11" font-weight="bold">C</text>
               </g>
               
               <!-- Правые колёса (A, D) -->
               <!-- Колесо A (переднее правое) -->
-              <g id="wheel-a" transform="translate(240, 180)">
-                <ellipse cx="0" cy="0" rx="25" ry="15" 
-                         fill="rgba(0, 255, 136, 0.3)" 
+              <g id="wheel-a" transform="translate(190, 170)">
+                <ellipse cx="0" cy="0" rx="18" ry="22" 
+                         fill="rgba(0, 255, 136, 0.2)" 
                          stroke="#00ff88" 
                          stroke-width="2"
                          class="wheel"/>
-                <line x1="-20" y1="0" x2="20" y2="0" 
-                      stroke="#00ff88" 
-                      stroke-width="3"
-                      class="wheel-spoke"/>
-                <text x="40" y="4" fill="#00ff88" font-size="10" font-weight="bold">A</text>
+                <g class="servo-arrow" transform="rotate(-90)">
+                  <line x1="0" y1="0" x2="-18" y2="0" 
+                        stroke="#ffcc00" 
+                        stroke-width="3"
+                        stroke-linecap="round"/>
+                  <polygon points="-18,-4 -22,0 -18,4" 
+                           fill="#ffcc00"/>
+                  <text x="14" y="4" fill="#ffcc00" font-size="8" font-weight="bold" class="servo-angle-text">90°</text>
+                </g>
+                <g class="speed-arrow" transform="translate(35, 0)">
+                  <line x1="0" y1="0" x2="0" y2="0" 
+                        stroke="#00ff88" 
+                        stroke-width="6"
+                        stroke-linecap="round"
+                        class="speed-arrow-line"/>
+                  <text x="0" y="-4" text-anchor="middle" 
+                        fill="#00ff88" font-size="9" font-weight="bold" class="speed-text">0</text>
+                </g>
+                <text x="55" y="4" fill="#00ff88" font-size="11" font-weight="bold">A</text>
               </g>
               
               <!-- Колесо D (заднее правое) -->
-              <g id="wheel-d" transform="translate(240, 220)">
-                <ellipse cx="0" cy="0" rx="25" ry="15" 
-                         fill="rgba(0, 255, 136, 0.3)" 
+              <g id="wheel-d" transform="translate(190, 225)">
+                <ellipse cx="0" cy="0" rx="18" ry="22" 
+                         fill="rgba(0, 255, 136, 0.2)" 
                          stroke="#00ff88" 
                          stroke-width="2"
                          class="wheel"/>
-                <line x1="-20" y1="0" x2="20" y2="0" 
-                      stroke="#00ff88" 
-                      stroke-width="3"
-                      class="wheel-spoke"/>
-                <text x="40" y="4" fill="#00ff88" font-size="10" font-weight="bold">D</text>
+                <g class="servo-arrow" transform="rotate(-90)">
+                  <line x1="0" y1="0" x2="-18" y2="0" 
+                        stroke="#ffcc00" 
+                        stroke-width="3"
+                        stroke-linecap="round"/>
+                  <polygon points="-18,-4 -22,0 -18,4" 
+                           fill="#ffcc00"/>
+                  <text x="14" y="4" fill="#ffcc00" font-size="8" font-weight="bold" class="servo-angle-text">90°</text>
+                </g>
+                <g class="speed-arrow" transform="translate(35, 0)">
+                  <line x1="0" y1="0" x2="0" y2="0" 
+                        stroke="#00ff88" 
+                        stroke-width="6"
+                        stroke-linecap="round"
+                        class="speed-arrow-line"/>
+                  <text x="0" y="-4" text-anchor="middle" 
+                        fill="#00ff88" font-size="9" font-weight="bold" class="speed-text">0</text>
+                </g>
+                <text x="55" y="4" fill="#00ff88" font-size="11" font-weight="bold">D</text>
               </g>
               
-              <!-- Сервоприводы (маленькие кружки) -->
-              <!-- Серво 0 (мотор B) -->
-              <circle id="servo-0" cx="80" cy="170" r="8" 
-                      fill="rgba(255, 204, 0, 0.5)" 
+              <!-- Сервоприводы (маленькие кружки у колёс) 
+              <circle id="servo-0" cx="65" cy="172" r="5" 
+                      fill="rgba(255, 204, 0, 0.4)" 
                       stroke="#ffcc00" 
                       stroke-width="2"/>
-              <text x="80" y="174" text-anchor="middle" 
-                    fill="#ffcc00" font-size="8" font-weight="bold">S0</text>
+              <text x="65" y="186" text-anchor="middle" 
+                    fill="#ffcc00" font-size="7" font-weight="bold">S0</text>
               
-              <!-- Серво 1 (мотор A) -->
-              <circle id="servo-1" cx="220" cy="170" r="8" 
-                      fill="rgba(255, 204, 0, 0.5)" 
+              <circle id="servo-1" cx="195" cy="172" r="5" 
+                      fill="rgba(255, 204, 0, 0.4)" 
                       stroke="#ffcc00" 
                       stroke-width="2"/>
-              <text x="220" y="174" text-anchor="middle" 
-                    fill="#ffcc00" font-size="8" font-weight="bold">S1</text>
+              <text x="195" y="186" text-anchor="middle" 
+                    fill="#ffcc00" font-size="7" font-weight="bold">S1</text>
               
-              <!-- Серво 2 (мотор D) -->
-              <circle id="servo-2" cx="220" cy="230" r="8" 
-                      fill="rgba(255, 204, 0, 0.5)" 
+              <circle id="servo-2" cx="195" cy="233" r="5" 
+                      fill="rgba(255, 204, 0, 0.4)" 
                       stroke="#ffcc00" 
                       stroke-width="2"/>
-              <text x="220" y="234" text-anchor="middle" 
-                    fill="#ffcc00" font-size="8" font-weight="bold">S2</text>
+              <text x="195" y="247" text-anchor="middle" 
+                    fill="#ffcc00" font-size="7" font-weight="bold">S2</text>
               
-              <!-- Серво 3 (мотор C) -->
-              <circle id="servo-3" cx="80" cy="230" r="8" 
-                      fill="rgba(255, 204, 0, 0.5)" 
+              <circle id="servo-3" cx="65" cy="233" r="5" 
+                      fill="rgba(255, 204, 0, 0.4)" 
                       stroke="#ffcc00" 
                       stroke-width="2"/>
-              <text x="80" y="234" text-anchor="middle" 
-                    fill="#ffcc00" font-size="8" font-weight="bold">S3</text>
-              
-              <!-- Индикаторы скорости -->
-              <g id="speed-indicators" transform="translate(150, 280)">
-                <text x="0" y="0" text-anchor="middle" 
-                      fill="#aaa" font-size="10">Скорость:</text>
-                <text x="-60" y="20" text-anchor="middle" 
-                      fill="#ff6b6b" font-size="9">Левые: <tspan id="speed-left">0</tspan></text>
-                <text x="60" y="20" text-anchor="middle" 
-                      fill="#00ff88" font-size="9">Правые: <tspan id="speed-right">0</tspan></text>
-              </g>
-              
-              <!-- Индикаторы угла серво -->
-              <g id="servo-indicators" transform="translate(150, 320)">
-                <text x="0" y="0" text-anchor="middle" 
-                      fill="#aaa" font-size="10">Серво:</text>
-                <text x="-60" y="20" text-anchor="middle" 
-                      fill="#ffcc00" font-size="9">Левые: <tspan id="servo-left">90</tspan>°</text>
-                <text x="60" y="20" text-anchor="middle" 
-                      fill="#ffcc00" font-size="9">Правые: <tspan id="servo-right">90</tspan>°</text>
-              </g>
+              <text x="65" y="247" text-anchor="middle" 
+                    fill="#ffcc00" font-size="7" font-weight="bold">S3</text>
+              -->
             </svg>
           </div>
           
@@ -1061,9 +1086,9 @@
             <h4 style="color: #00d9ff; margin-bottom: 10px;">💡 Подсказки:</h4>
             <ul style="color: #aaa; font-size: 14px; line-height: 1.8; padding-left: 20px;">
               <li>Перемещайте джойстик для управления</li>
-              <li>Режим "Езда" - танковое управление</li>
-              <li>Режим "Серво" - управление сервоприводами</li>
-              <li>Режим "Микс" - одновременное управление</li>
+              <li>Режим "Езда" - танковое управление моторами</li>
+              <li>Режим "Серво" - поворот всех колёс (X ось)</li>
+              <li>Режим "Микс" - поворот (X) + скорость (Y)</li>
               <li>Кнопка "СТОП" останавливает все моторы</li>
             </ul>
           </div>
@@ -1083,18 +1108,18 @@
       document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
       });
-      
+
       // Убираем активный класс у кнопок
       document.querySelectorAll('.tab-button').forEach(btn => {
         btn.classList.remove('active');
       });
-      
+
       // Показываем нужную закладку
       document.getElementById('tab-' + tabName).classList.add('active');
-      
+
       // Подсвечиваем кнопку
       event.target.classList.add('active');
-      
+
       // Если переключились на джойстик - инициализируем
       if (tabName === 'joystick') {
         initJoystick();
@@ -1472,44 +1497,38 @@
         const motors = calculateTankDrive(x, y);
         sendMotorCommand(motors);
         updateMotorStatusDisplay(motors);
+        // Обновляем визуализацию с текущими углами серво
+        updateRoverVisualizer(motors, servoAngles);
         lastMotorCommand = motors;
       } else if (currentJoystickMode === 'servo') {
         // Управление сервоприводами от джойстика
-        // Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
-        // Левые: 0, 3 | Правые: 1, 2
-        // X - поворот влево/вправо (левые и правые серво в противоположных направлениях)
-        // Y - наклон вперёд/назад (все серво в одном направлении)
-        const servoDelta = 3; // Шаг изменения угла
+        // 90° = колёса смотрят прямо (роллер едет вперёд)
+        // Передние (B, A) в одну сторону, задние (C, D) в обратную
         
-        if (Math.abs(x) > 10) {
-          // Поворот: левые и правые серво в противоположных направлениях
-          const leftDir = x > 0 ? -servoDelta : servoDelta;   // Левые (0, 3)
-          const rightDir = x > 0 ? servoDelta : -servoDelta;  // Правые (1, 2)
-          
-          servoAngles.servo0 = constrain(servoAngles.servo0 + leftDir, 0, 180);   // B левый
-          servoAngles.servo3 = constrain(servoAngles.servo3 + leftDir, 0, 180);   // C левый
-          servoAngles.servo1 = constrain(servoAngles.servo1 + rightDir, 0, 180);  // A правый
-          servoAngles.servo2 = constrain(servoAngles.servo2 + rightDir, 0, 180);  // D правый
-        }
+        // Преобразуем X джойстика (-100...100) в угол сервопривода
+        // X = 0 (центр) → 90° (прямо)
+        // X = -100 (влево) → 0° (полный поворот влево)
+        // X = +100 (вправо) → 180° (полный поворот вправо)
+        const targetAngle = Math.round(90 - x); // Инвертируем X
         
-        if (Math.abs(y) > 10) {
-          // Наклон: все серво в одном направлении
-          const tiltDir = y > 0 ? -servoDelta : servoDelta;
-          
-          servoAngles.servo0 = constrain(servoAngles.servo0 + tiltDir, 0, 180);   // B левый
-          servoAngles.servo3 = constrain(servoAngles.servo3 + tiltDir, 0, 180);   // C левый
-          servoAngles.servo1 = constrain(servoAngles.servo1 + tiltDir, 0, 180);   // A правый
-          servoAngles.servo2 = constrain(servoAngles.servo2 + tiltDir, 0, 180);   // D правый
-        }
+        // Моментальная установка углов
+        // Передние колёса (B=серво0, A=серво1)
+        servoAngles.servo0 = constrain(targetAngle, 0, 180);  // B переднее левое
+        servoAngles.servo1 = constrain(targetAngle, 0, 180);  // A переднее правое
         
-        // Отправляем команды только если изменились
+        // Задние колёса (C=серво3, D=серво2) поворачиваются в обратную сторону
+        // 180° - targetAngle даёт противоположный угол
+        servoAngles.servo3 = constrain(180 - targetAngle, 0, 180);  // C заднее левое
+        servoAngles.servo2 = constrain(180 - targetAngle, 0, 180);  // D заднее правое
+
+        // Отправляем команды
         const servoCommand = {
           s0: servoAngles.servo0,
           s1: servoAngles.servo1,
           s2: servoAngles.servo2,
           s3: servoAngles.servo3
         };
-        
+
         if (JSON.stringify(servoCommand) !== JSON.stringify(lastServoCommand)) {
           sendServoCommand(servoCommand);
           lastServoCommand = servoCommand;
@@ -1521,15 +1540,62 @@
         document.getElementById('joy-motorC').textContent = 'S2:' + servoAngles.servo2;
         document.getElementById('joy-motorD').textContent = 'S3:' + servoAngles.servo3;
 
-        // Обновляем визуализацию сервоприводов
+        // Обновляем визуализацию сервоприводов и колёс
         updateServoVisualizer(servoAngles);
 
       } else if (currentJoystickMode === 'mixed') {
-        const result = calculateMixedControl(x, y, false);
-        const motors = result.motors;
+        // Смешанное управление: моторы + сервоприводы
+        // X ось - поворот колёс (серво)
+        // Y ось - скорость моторов
+        
+        // 1. Управление сервоприводами (поворот колёс)
+        const targetAngle = Math.round(90 - x); // X: -100=180°, 0=90°, +100=0°
+        
+        // Передние колёса (B=серво0, A=серво1)
+        servoAngles.servo0 = constrain(targetAngle, 0, 180);
+        servoAngles.servo1 = constrain(targetAngle, 0, 180);
+        
+        // Задние колёса (C=серво3, D=серво2) - в обратную сторону
+        servoAngles.servo3 = constrain(180 - targetAngle, 0, 180);
+        servoAngles.servo2 = constrain(180 - targetAngle, 0, 180);
+        
+        // 2. Управление моторами (скорость)
+        // Y: -100 = назад (-255), 0 = стоп (0), +100 = вперёд (+255)
+        const targetSpeed = Math.round(-y * 255 / 100);
+        
+        const motors = {
+          motorA: targetSpeed,
+          motorB: targetSpeed,
+          motorC: targetSpeed,
+          motorD: targetSpeed
+        };
+        
+        // Отправляем команды сервоприводов
+        const servoCommand = {
+          s0: servoAngles.servo0,
+          s1: servoAngles.servo1,
+          s2: servoAngles.servo2,
+          s3: servoAngles.servo3
+        };
+        
+        if (JSON.stringify(servoCommand) !== JSON.stringify(lastServoCommand)) {
+          sendServoCommand(servoCommand);
+          lastServoCommand = servoCommand;
+        }
+        
+        // Отправляем команды моторов
         sendMotorCommand(motors);
         updateMotorStatusDisplay(motors);
         lastMotorCommand = motors;
+        
+        // Обновляем отображение
+        document.getElementById('joy-motorA').textContent = 'S:' + servoAngles.servo0 + ' V:' + targetSpeed;
+        document.getElementById('joy-motorB').textContent = 'S:' + servoAngles.servo1 + ' V:' + targetSpeed;
+        document.getElementById('joy-motorC').textContent = 'S:' + servoAngles.servo2 + ' V:' + targetSpeed;
+        document.getElementById('joy-motorD').textContent = 'S:' + servoAngles.servo3 + ' V:' + targetSpeed;
+        
+        // Обновляем визуализацию
+        updateRoverVisualizer(motors, servoAngles);
       }
       
       lastSendTime = now;
@@ -1612,13 +1678,10 @@
       document.getElementById('joy-motorB').textContent = motors.motorB;
       document.getElementById('joy-motorC').textContent = motors.motorC;
       document.getElementById('joy-motorD').textContent = motors.motorD;
-      
-      // Обновляем визуализацию
-      updateRoverVisualizer(motors);
     }
 
     // ===== Визуализация ровера =====
-    function updateRoverVisualizer(motors) {
+    function updateRoverVisualizer(motors, servoAngles) {
       // Конфигурация: 0-B(лев), 1-A(прав), 2-D(прав), 3-C(лев)
       // Левые: B, C | Правые: A, D
       
@@ -1627,86 +1690,74 @@
       const motorC = motors.motorC || 0;
       const motorD = motors.motorD || 0;
       
-      // Обновляем индикаторы скорости
-      const leftSpeed = (motorB + motorC) / 2;
-      const rightSpeed = (motorA + motorD) / 2;
+      // Обновляем визуализацию для каждого колеса
+      updateWheelVisual('wheel-a', motorA, servoAngles.servo1, 'right');
+      updateWheelVisual('wheel-b', motorB, servoAngles.servo0, 'left');
+      updateWheelVisual('wheel-c', motorC, servoAngles.servo3, 'left');
+      updateWheelVisual('wheel-d', motorD, servoAngles.servo2, 'right');
+    }
+
+    function updateWheelVisual(wheelId, speed, servoAngle, side) {
+      const wheel = document.getElementById(wheelId);
+      const servoArrow = wheel.querySelector('.servo-arrow');
+      const speedArrowLine = wheel.querySelector('.speed-arrow-line');
+      const speedText = wheel.querySelector('.speed-text');
+      const servoAngleText = wheel.querySelector('.servo-angle-text');
       
-      document.getElementById('speed-left').textContent = Math.round(leftSpeed);
-      document.getElementById('speed-right').textContent = Math.round(rightSpeed);
+      // 1. Поворот стрелки сервопривода
+      // В SVG стрелка изначально повёрнута на -90° (смотрит вверх)
+      // При 90° серво стрелка должна смотреть вверх = поворот 0°
+      // При 0° серво стрелка должна смотреть влево = поворот -90°
+      // При 180° серво стрелка должна смотреть вправо = поворот +90°
+      // 
+      // Но в SVG стрелка нарисована горизонтально (смотрит вправо при 0°)
+      // Поэтому: 90° серво = стрелка вверх = поворот -90° от горизонтали
+      // Формула: rotation = servoAngle - 180
+      const arrowRotation = servoAngle - 180;
+      servoArrow.setAttribute('transform', `rotate(${arrowRotation})`);
       
-      // Анимация колёс
-      updateWheelAnimation('wheel-a', motorA);
-      updateWheelAnimation('wheel-b', motorB);
-      updateWheelAnimation('wheel-c', motorC);
-      updateWheelAnimation('wheel-d', motorD);
+      // Обновляем текст угла
+      if (servoAngleText) {
+        servoAngleText.textContent = servoAngle + '°';
+      }
+      
+      // 2. Стрелка скорости
+      // Направление: вперёд (вниз) или назад (вверх)
+      // Длина пропорциональна скорости (макс 255 = 40px)
+      const arrowLength = Math.abs(speed) * 40 / 255;
+      const minArrowLength = speed !== 0 ? 8 : 0;
+      const finalLength = Math.max(minArrowLength, arrowLength);
+      
+      const direction = speed >= 0 ? 1 : -1; // 1 = вперёд (вниз), -1 = назад (вверх)
+      
+      // Рисуем вертикальную стрелку
+      const endY = direction * finalLength;
+      speedArrowLine.setAttribute('x1', 0);
+      speedArrowLine.setAttribute('y1', 0);
+      speedArrowLine.setAttribute('x2', 0);
+      speedArrowLine.setAttribute('y2', endY);
+      
+      // Обновляем текст скорости
+      if (speedText) {
+        speedText.textContent = Math.abs(speed);
+      }
       
       // Подсветка активных колёс
-      updateWheelHighlight('wheel-a', motorA, 'right');
-      updateWheelHighlight('wheel-b', motorB, 'left');
-      updateWheelHighlight('wheel-c', motorC, 'left');
-      updateWheelHighlight('wheel-d', motorD, 'right');
-    }
-
-    function updateWheelAnimation(wheelId, speed) {
-      const wheel = document.getElementById(wheelId);
-      const spoke = wheel.querySelector('.wheel-spoke');
-      
-      // Удаляем существующие классы анимации
-      spoke.classList.remove('wheel-spinning-forward', 'wheel-spinning-backward');
-      
-      // Добавляем анимацию если скорость не нулевая
-      if (Math.abs(speed) > 10) {
-        if (speed > 0) {
-          spoke.classList.add('wheel-spinning-forward');
-        } else {
-          spoke.classList.add('wheel-spinning-backward');
-        }
-      }
-    }
-
-    function updateWheelHighlight(wheelId, speed, side) {
-      const wheel = document.getElementById(wheelId);
       const ellipse = wheel.querySelector('ellipse');
-      
-      // Удаляем существующие классы подсветки
-      ellipse.classList.remove('wheel-active-left', 'wheel-active-right');
-      
-      // Добавляем подсветку если скорость не нулевая
       if (Math.abs(speed) > 10) {
-        if (side === 'left') {
-          ellipse.classList.add('wheel-active-left');
-        } else {
-          ellipse.classList.add('wheel-active-right');
-        }
-      }
-    }
-
-    // Обновление углов сервоприводов на визуализации
-    function updateServoVisualizer(servoAngles) {
-      // Левые серво: 0 (B), 3 (C)
-      // Правые серво: 1 (A), 2 (D)
-      const leftServo = Math.round((servoAngles.servo0 + servoAngles.servo3) / 2);
-      const rightServo = Math.round((servoAngles.servo1 + servoAngles.servo2) / 2);
-      
-      document.getElementById('servo-left').textContent = leftServo;
-      document.getElementById('servo-right').textContent = rightServo;
-      
-      // Подсветка активных серво
-      updateServoHighlight('servo-0', servoAngles.servo0, 90);
-      updateServoHighlight('servo-1', servoAngles.servo1, 90);
-      updateServoHighlight('servo-2', servoAngles.servo2, 90);
-      updateServoHighlight('servo-3', servoAngles.servo3, 90);
-    }
-
-    function updateServoHighlight(servoId, angle, centerAngle) {
-      const servo = document.getElementById(servoId);
-      
-      // Подсвечиваем если угол отличается от центрального
-      if (Math.abs(angle - centerAngle) > 5) {
-        servo.classList.add('servo-active');
+        ellipse.classList.add(side === 'left' ? 'wheel-active-left' : 'wheel-active-right');
       } else {
-        servo.classList.remove('servo-active');
+        ellipse.classList.remove('wheel-active-left', 'wheel-active-right');
       }
+    }
+
+    // Обновление углов сервоприводов на визуализации (режим servo)
+    function updateServoVisualizer(servoAngles) {
+      // Для режима серво используем последние известные скорости моторов
+      // или 0 если моторы не двигаются
+      updateRoverVisualizer({
+        motorA: 0, motorB: 0, motorC: 0, motorD: 0
+      }, servoAngles);
     }
 
     function setJoystickMode(mode) {
