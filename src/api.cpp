@@ -195,6 +195,250 @@ void handleCalibrateServo() {
   sendJSONResponse(200, jsonResponse);
 }
 
+// ===== API для управления камерой =====
+
+// GET /api/camera - получить статус камеры
+void handleGetCamera() {
+  api_log("GET /api/camera");
+
+  uint16_t panPWM, tiltPWM;
+  uint16_t panCenter, tiltCenter, panMin, panMax, tiltMin, tiltMax;
+  
+  camera_getPWM(&panPWM, &tiltPWM);
+  camera_getConfig(&panCenter, &tiltCenter, &panMin, &panMax, &tiltMin, &tiltMax);
+
+  JsonDocument doc;
+  doc["pan_pwm"] = panPWM;
+  doc["tilt_pwm"] = tiltPWM;
+  doc["pan_center"] = panCenter;
+  doc["tilt_center"] = tiltCenter;
+  doc["pan_min"] = panMin;
+  doc["pan_max"] = panMax;
+  doc["tilt_min"] = tiltMin;
+  doc["tilt_max"] = tiltMax;
+
+  String response;
+  serializeJson(doc, response);
+  sendJSONResponse(200, response);
+}
+
+// POST /api/camera/set - установить позицию камеры (PWM значения)
+void handleSetCamera() {
+  api_log("POST /api/camera/set");
+  
+  if (!server.hasArg("plain")) {
+    api_log("ERROR: No data provided");
+    sendJSONResponse(400, "{\"error\":\"No data provided\"}");
+    return;
+  }
+
+  api_log("Request body: " + server.arg("plain"));
+  
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+  if (error) {
+    api_log("ERROR: Invalid JSON - " + String(error.c_str()));
+    sendJSONResponse(400, "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  // Проверяем наличие полей
+  bool hasPan = doc["pan_pwm"].is<uint16_t>();
+  bool hasTilt = doc["tilt_pwm"].is<uint16_t>();
+
+  if (!hasPan && !hasTilt) {
+    api_log("ERROR: No PWM values provided");
+    sendJSONResponse(400, "{\"error\":\"No PWM values provided\"}");
+    return;
+  }
+
+  uint16_t panPWM = doc["pan_pwm"] | 300;
+  uint16_t tiltPWM = doc["tilt_pwm"] | 300;
+
+  // Устанавливаем значения
+  if (hasPan && hasTilt) {
+    camera_setPWM(panPWM, tiltPWM);
+  } else if (hasPan) {
+    camera_setPanPWM(panPWM);
+  } else if (hasTilt) {
+    camera_setTiltPWM(tiltPWM);
+  }
+
+  api_log("Camera set: PAN=" + String(panPWM) + ", TILT=" + String(tiltPWM));
+
+  JsonDocument response;
+  response["success"] = true;
+  response["pan_pwm"] = panPWM;
+  response["tilt_pwm"] = tiltPWM;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
+// POST /api/camera/move - плавное движение на заданный шаг
+void handleMoveCamera() {
+  api_log("POST /api/camera/move");
+  
+  if (!server.hasArg("plain")) {
+    api_log("ERROR: No data provided");
+    sendJSONResponse(400, "{\"error\":\"No data provided\"}");
+    return;
+  }
+
+  api_log("Request body: " + server.arg("plain"));
+  
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+  if (error) {
+    api_log("ERROR: Invalid JSON - " + String(error.c_str()));
+    sendJSONResponse(400, "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  int16_t panStep = doc["pan_step"] | 0;
+  int16_t tiltStep = doc["tilt_step"] | 0;
+
+  // Ограничиваем шаги для безопасности
+  panStep = constrain(panStep, -100, 100);
+  tiltStep = constrain(tiltStep, -100, 100);
+
+  camera_moveStep(panStep, tiltStep);
+
+  uint16_t panPWM, tiltPWM;
+  camera_getPWM(&panPWM, &tiltPWM);
+
+  api_log("Camera moved: pan_step=" + String(panStep) + ", tilt_step=" + String(tiltStep));
+
+  JsonDocument response;
+  response["success"] = true;
+  response["pan_step"] = panStep;
+  response["tilt_step"] = tiltStep;
+  response["pan_pwm"] = panPWM;
+  response["tilt_pwm"] = tiltPWM;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
+// POST /api/camera/center - центрировать камеру
+void handleCenterCamera() {
+  api_log("POST /api/camera/center");
+  
+  camera_center();
+
+  uint16_t panPWM, tiltPWM;
+  camera_getPWM(&panPWM, &tiltPWM);
+
+  JsonDocument response;
+  response["success"] = true;
+  response["message"] = "Camera centered";
+  response["pan_pwm"] = panPWM;
+  response["tilt_pwm"] = tiltPWM;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
+// POST /api/camera/calibrate/center - калибровка центрального положения
+void handleCalibrateCameraCenter() {
+  api_log("POST /api/camera/calibrate/center");
+  
+  if (!server.hasArg("plain")) {
+    api_log("ERROR: No data provided");
+    sendJSONResponse(400, "{\"error\":\"No data provided\"}");
+    return;
+  }
+
+  api_log("Request body: " + server.arg("plain"));
+  
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+  if (error) {
+    api_log("ERROR: Invalid JSON - " + String(error.c_str()));
+    sendJSONResponse(400, "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  uint16_t panCenter = doc["pan_center"] | 300;
+  uint16_t tiltCenter = doc["tilt_center"] | 300;
+
+  if (panCenter < 0 || panCenter > 4095 || tiltCenter < 0 || tiltCenter > 4095) {
+    api_log("ERROR: Invalid PWM values");
+    sendJSONResponse(400, "{\"error\":\"Invalid PWM values (must be 0-4095)\"}");
+    return;
+  }
+
+  camera_calibrateCenter(panCenter, tiltCenter);
+
+  JsonDocument response;
+  response["success"] = true;
+  response["pan_center"] = panCenter;
+  response["tilt_center"] = tiltCenter;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
+// POST /api/camera/calibrate/limits - калибровка границ движения
+void handleCalibrateCameraLimits() {
+  api_log("POST /api/camera/calibrate/limits");
+  
+  if (!server.hasArg("plain")) {
+    api_log("ERROR: No data provided");
+    sendJSONResponse(400, "{\"error\":\"No data provided\"}");
+    return;
+  }
+
+  api_log("Request body: " + server.arg("plain"));
+  
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, server.arg("plain"));
+
+  if (error) {
+    api_log("ERROR: Invalid JSON - " + String(error.c_str()));
+    sendJSONResponse(400, "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  uint16_t panMin = doc["pan_min"] | 150;
+  uint16_t panMax = doc["pan_max"] | 450;
+  uint16_t tiltMin = doc["tilt_min"] | 150;
+  uint16_t tiltMax = doc["tilt_max"] | 450;
+
+  if (panMin < 0 || panMin > 4095 || panMax < 0 || panMax > 4095 ||
+      tiltMin < 0 || tiltMin > 4095 || tiltMax < 0 || tiltMax > 4095) {
+    api_log("ERROR: Invalid PWM values");
+    sendJSONResponse(400, "{\"error\":\"Invalid PWM values (must be 0-4095)\"}");
+    return;
+  }
+
+  if (panMin >= panMax || tiltMin >= tiltMax) {
+    api_log("ERROR: min must be less than max");
+    sendJSONResponse(400, "{\"error\":\"min must be less than max\"}");
+    return;
+  }
+
+  camera_calibrateLimits(panMin, panMax, tiltMin, tiltMax);
+
+  JsonDocument response;
+  response["success"] = true;
+  response["pan_min"] = panMin;
+  response["pan_max"] = panMax;
+  response["tilt_min"] = tiltMin;
+  response["tilt_max"] = tiltMax;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
 // GET /api/motor - получить статус моторов
 void handleGetMotors() {
   api_log("GET /api/motor");
@@ -359,6 +603,15 @@ void api_init() {
   server.on("/api/servo", HTTP_GET, handleGetServos);
   server.on("/api/servo", HTTP_POST, handleSetServo);
   server.on("/api/servo/calibrate", HTTP_POST, handleCalibrateServo);
+  
+  // Маршруты для управления камерой
+  server.on("/api/camera", HTTP_GET, handleGetCamera);
+  server.on("/api/camera/set", HTTP_POST, handleSetCamera);
+  server.on("/api/camera/move", HTTP_POST, handleMoveCamera);
+  server.on("/api/camera/center", HTTP_POST, handleCenterCamera);
+  server.on("/api/camera/calibrate/center", HTTP_POST, handleCalibrateCameraCenter);
+  server.on("/api/camera/calibrate/limits", HTTP_POST, handleCalibrateCameraLimits);
+  
   server.on("/api/motor", HTTP_GET, handleGetMotors);
   server.on("/api/motor", HTTP_POST, handleSetMotor);
   server.on("/api/motor/stop", HTTP_POST, handleStopMotors);

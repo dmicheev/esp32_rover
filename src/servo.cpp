@@ -7,6 +7,10 @@
 // Максимальное количество сервоприводов (PCA9685 имеет 16 каналов)
 #define MAX_SERVOS 16
 
+// Каналы для управления камерой
+#define CAMERA_PAN_CHANNEL  4  // Горизонтальное движение
+#define CAMERA_TILT_CHANNEL 5  // Вертикальное движение
+
 // Создаем объект драйвера PCA9685
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 
@@ -22,6 +26,30 @@ ServoConfig servoConfigs[MAX_SERVOS];
 
 // Корректировки по результатам калибровки
 int correction[MAX_SERVOS] = SERVO_CORRECTION;
+
+// Структура для хранения настроек камеры
+struct CameraConfig {
+  uint16_t panCenter;      // Центральное положение по горизонтали (PWM)
+  uint16_t tiltCenter;     // Центральное положение по вертикали (PWM)
+  uint16_t panMin;         // Минимальное значение по горизонтали
+  uint16_t panMax;         // Максимальное значение по горизонтали
+  uint16_t tiltMin;        // Минимальное значение по вертикали
+  uint16_t tiltMax;        // Максимальное значение по вертикали
+  uint16_t currentPan;     // Текущее положение по горизонтали
+  uint16_t currentTilt;    // Текущее положение по вертикали
+};
+
+// Настройки камеры по умолчанию
+CameraConfig cameraConfig = {
+  .panCenter = 300,        // Среднее значение PWM (примерно 1.5ms при 50Hz)
+  .tiltCenter = 300,
+  .panMin = 150,           // ~0.75ms
+  .panMax = 450,           // ~2.25ms
+  .tiltMin = 150,
+  .tiltMax = 450,
+  .currentPan = 300,
+  .currentTilt = 300
+};
 
 // Буфер для приема команд из Serial
 String inputString = "";
@@ -54,6 +82,115 @@ uint16_t servo_getMin(uint8_t servoNum) {
 uint16_t servo_getMax(uint8_t servoNum) {
   if (servoNum >= MAX_SERVOS) return DEFAULT_SERVOMAX;
   return servoConfigs[servoNum].maxPulse;
+}
+
+// ===== Функции для точного управления камерой =====
+
+// Установка точного значения PWM для камеры (очень точная регулировка)
+void camera_setPWM(uint16_t panPWM, uint16_t tiltPWM) {
+  // Ограничиваем значения в допустимом диапазоне
+  panPWM = constrain(panPWM, cameraConfig.panMin, cameraConfig.panMax);
+  tiltPWM = constrain(tiltPWM, cameraConfig.tiltMin, cameraConfig.tiltMax);
+  
+  // Устанавливаем PWM для обоих каналов камеры
+  pwm.setPWM(CAMERA_PAN_CHANNEL, 0, panPWM);
+  pwm.setPWM(CAMERA_TILT_CHANNEL, 0, tiltPWM);
+  
+  // Сохраняем текущие значения
+  cameraConfig.currentPan = panPWM;
+  cameraConfig.currentTilt = tiltPWM;
+  
+  Serial.print("Camera: PAN=");
+  Serial.print(panPWM);
+  Serial.print(", TILT=");
+  Serial.println(tiltPWM);
+}
+
+// Установка только горизонтального положения (Pan)
+void camera_setPanPWM(uint16_t pwmValue) {
+  pwmValue = constrain(pwmValue, cameraConfig.panMin, cameraConfig.panMax);
+  pwm.setPWM(CAMERA_PAN_CHANNEL, 0, pwmValue);
+  cameraConfig.currentPan = pwmValue;
+  Serial.print("Camera PAN set to: ");
+  Serial.println(pwmValue);
+}
+
+// Установка только вертикального положения (Tilt)
+void camera_setTiltPWM(uint16_t pwmValue) {
+  pwmValue = constrain(pwmValue, cameraConfig.tiltMin, cameraConfig.tiltMax);
+  pwm.setPWM(CAMERA_TILT_CHANNEL, 0, pwmValue);
+  cameraConfig.currentTilt = pwmValue;
+  Serial.print("Camera TILT set to: ");
+  Serial.println(pwmValue);
+}
+
+// Плавное движение на заданный шаг (для точной настройки)
+void camera_moveStep(int16_t panStep, int16_t tiltStep) {
+  int16_t newPan = cameraConfig.currentPan + panStep;
+  int16_t newTilt = cameraConfig.currentTilt + tiltStep;
+  
+  // Ограничиваем в допустимом диапазоне
+  newPan = constrain(newPan, cameraConfig.panMin, cameraConfig.panMax);
+  newTilt = constrain(newTilt, cameraConfig.tiltMin, cameraConfig.tiltMax);
+  
+  camera_setPWM(newPan, newTilt);
+}
+
+// Центрирование камеры
+void camera_center() {
+  camera_setPWM(cameraConfig.panCenter, cameraConfig.tiltCenter);
+  Serial.println("Camera centered");
+}
+
+// Получение текущих значений PWM камеры
+void camera_getPWM(uint16_t* panPWM, uint16_t* tiltPWM) {
+  if (panPWM) *panPWM = cameraConfig.currentPan;
+  if (tiltPWM) *tiltPWM = cameraConfig.currentTilt;
+}
+
+// Калибровка камеры - установка центрального положения
+void camera_calibrateCenter(uint16_t panCenter, uint16_t tiltCenter) {
+  cameraConfig.panCenter = constrain(panCenter, cameraConfig.panMin, cameraConfig.panMax);
+  cameraConfig.tiltCenter = constrain(tiltCenter, cameraConfig.tiltMin, cameraConfig.tiltMax);
+  Serial.print("Camera center calibrated: PAN=");
+  Serial.print(cameraConfig.panCenter);
+  Serial.print(", TILT=");
+  Serial.println(cameraConfig.tiltCenter);
+}
+
+// Калибровка границ движения камеры
+void camera_calibrateLimits(uint16_t panMin, uint16_t panMax, uint16_t tiltMin, uint16_t tiltMax) {
+  if (panMin >= panMax || tiltMin >= tiltMax) {
+    Serial.println("Error: MIN must be less than MAX");
+    return;
+  }
+  
+  cameraConfig.panMin = panMin;
+  cameraConfig.panMax = panMax;
+  cameraConfig.tiltMin = tiltMin;
+  cameraConfig.tiltMax = tiltMax;
+  
+  Serial.print("Camera limits calibrated: PAN[");
+  Serial.print(panMin);
+  Serial.print("-");
+  Serial.print(panMax);
+  Serial.print("], TILT[");
+  Serial.print(tiltMin);
+  Serial.print("-");
+  Serial.print(tiltMax);
+  Serial.println("]");
+}
+
+// Получение конфигурации камеры
+void camera_getConfig(uint16_t* panCenter, uint16_t* tiltCenter,
+                      uint16_t* panMin, uint16_t* panMax,
+                      uint16_t* tiltMin, uint16_t* tiltMax) {
+  if (panCenter) *panCenter = cameraConfig.panCenter;
+  if (tiltCenter) *tiltCenter = cameraConfig.tiltCenter;
+  if (panMin) *panMin = cameraConfig.panMin;
+  if (panMax) *panMax = cameraConfig.panMax;
+  if (tiltMin) *tiltMin = cameraConfig.tiltMin;
+  if (tiltMax) *tiltMax = cameraConfig.tiltMax;
 }
 
 // ===== Внутренние функции =====
