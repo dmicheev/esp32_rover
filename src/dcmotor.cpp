@@ -3,122 +3,111 @@
 #include "dcmotor.h"
 #include "pins.h"
 
+// ===== Константы =====
 
+#define MOTOR_SPEED_MIN -255
+#define MOTOR_SPEED_MAX 255
+#define MOTOR_COUNT 4
 
-// Текущие скорости моторов
-static int motorSpeedA = 0;
-static int motorSpeedB = 0;
-static int motorSpeedC = 0;
-static int motorSpeedD = 0;
+// ===== Структуры данных =====
 
-// Функция установки скорости для одного мотора
-static void setMotorSpeed(int pinA, int pinB, int speed) {
-  speed = constrain(speed, -255, 255);
+struct MotorPins {
+  int pinA;
+  int pinB;
+};
+
+struct MotorState {
+  int speed;
+  MotorPins pins;
+};
+
+// ===== Глобальные переменные =====
+
+static MotorState motors[MOTOR_COUNT] = {
+  {0, {A_IA, A_IB}},  // Motor A
+  {0, {B_IA, B_IB}},  // Motor B
+  {0, {C_IA, C_IB}},  // Motor C
+  {0, {D_IA, D_IB}}   // Motor D
+};
+
+// ===== Вспомогательные функции =====
+
+// Установка скорости для одного мотора
+static void setMotorSpeed(MotorState& motor, int speed) {
+  speed = constrain(speed, MOTOR_SPEED_MIN, MOTOR_SPEED_MAX);
   
   if (speed > 0) {
-    // Движение вперёд
-    analogWrite(pinA, speed);
-    analogWrite(pinB, 0);
+    analogWrite(motor.pins.pinA, speed);
+    analogWrite(motor.pins.pinB, 0);
   } else if (speed < 0) {
-    // Движение назад
-    analogWrite(pinA, 0);
-    analogWrite(pinB, abs(speed));
+    analogWrite(motor.pins.pinA, 0);
+    analogWrite(motor.pins.pinB, abs(speed));
   } else {
-    // Остановка
-    analogWrite(pinA, 0);
-    analogWrite(pinB, 0);
+    analogWrite(motor.pins.pinA, 0);
+    analogWrite(motor.pins.pinB, 0);
   }
 }
 
+// Вывод информации о скорости мотора
+static void printMotorSpeed(const char* motorName, int speed) {
+  Serial.print("Motor ");
+  Serial.print(motorName);
+  Serial.print(" speed: ");
+  Serial.println(speed);
+}
+
+// ===== Публичные функции =====
+
 void setup_dc() {
-  // Настройка пинов мотора A
-  pinMode(A_IA, OUTPUT);
-  pinMode(A_IB, OUTPUT);
-
-  // Настройка пинов мотора B
-  pinMode(B_IA, OUTPUT);
-  pinMode(B_IB, OUTPUT);
-
-  // Настройка пинов мотора C
-  pinMode(C_IA, OUTPUT);
-  pinMode(C_IB, OUTPUT);
-
-  // Настройка пинов мотора D
-  pinMode(D_IA, OUTPUT);
-  pinMode(D_IB, OUTPUT);
-
-  // Останавливаем моторы при старте
+  const char* motorNames[] = {"A", "B", "C", "D"};
+  
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    pinMode(motors[i].pins.pinA, OUTPUT);
+    pinMode(motors[i].pins.pinB, OUTPUT);
+  }
+  
   motor_stopAll();
-
   Serial.println("DC motors initialized (A, B, C, D)");
-
-
 }
 
 void loop_dc() {
-  // Здесь можно добавить логику автоматического управления
-  // Сейчас просто поддерживаем установленные скорости
+  // Резерв для будущей логики автоматического управления
 }
 
 void motor_setSpeedA(int speed) {
-  motorSpeedA = speed;
-  setMotorSpeed(A_IA, A_IB, speed);
-  Serial.print("Motor A speed: ");
-  Serial.println(speed);
+  motors[0].speed = speed;
+  setMotorSpeed(motors[0], speed);
+  printMotorSpeed("A", speed);
 }
 
 void motor_setSpeedB(int speed) {
-  motorSpeedB = speed;
-  setMotorSpeed(B_IA, B_IB, speed);
-  Serial.print("Motor B speed: ");
-  Serial.println(speed);
+  motors[1].speed = speed;
+  setMotorSpeed(motors[1], speed);
+  printMotorSpeed("B", speed);
 }
 
 void motor_setSpeedC(int speed) {
-  motorSpeedC = speed;
-  setMotorSpeed(C_IA, C_IB, speed);
-  Serial.print("Motor C speed: ");
-  Serial.println(speed);
+  motors[2].speed = speed;
+  setMotorSpeed(motors[2], speed);
+  printMotorSpeed("C", speed);
 }
 
 void motor_setSpeedD(int speed) {
-  motorSpeedD = speed;
-  setMotorSpeed(D_IA, D_IB, speed);
-  Serial.print("Motor D speed: ");
-  Serial.println(speed);
+  motors[3].speed = speed;
+  setMotorSpeed(motors[3], speed);
+  printMotorSpeed("D", speed);
 }
 
-int motor_getSpeedA() {
-  return motorSpeedA;
-}
-
-int motor_getSpeedB() {
-  return motorSpeedB;
-}
-
-int motor_getSpeedC() {
-  return motorSpeedC;
-}
-
-int motor_getSpeedD() {
-  return motorSpeedD;
-}
+int motor_getSpeedA() { return motors[0].speed; }
+int motor_getSpeedB() { return motors[1].speed; }
+int motor_getSpeedC() { return motors[2].speed; }
+int motor_getSpeedD() { return motors[3].speed; }
 
 void motor_stopAll() {
-  motorSpeedA = 0;
-  motorSpeedB = 0;
-  motorSpeedC = 0;
-  motorSpeedD = 0;
-  
-  analogWrite(A_IA, LOW);
-  analogWrite(A_IB, LOW);
-  analogWrite(B_IA, LOW);
-  analogWrite(B_IB, LOW);
-  analogWrite(C_IA, LOW);
-  analogWrite(C_IB, LOW);
-  analogWrite(D_IA, LOW);
-  analogWrite(D_IB, LOW);
+  for (int i = 0; i < MOTOR_COUNT; i++) {
+    motors[i].speed = 0;
+    analogWrite(motors[i].pins.pinA, LOW);
+    analogWrite(motors[i].pins.pinB, LOW);
+  }
   Serial.println("All motors stopped (A, B, C, D)");
-
-  
 }

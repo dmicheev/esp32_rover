@@ -249,6 +249,7 @@
         });
         
         xhr.open('POST', '/api/ota/upload');
+        xhr.setRequestHeader('Content-Length', file.size.toString());
         xhr.send(formData);
       } catch (err) {
         status.textContent = '❌ Ошибка: ' + err.message;

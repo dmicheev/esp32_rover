@@ -4,25 +4,27 @@
 #include <Arduino.h>
 #include <WiFi.h>
 
+// ===== Константы =====
 
-// Флаг подключения
+#define WIFI_CONNECTION_TIMEOUT_MS 10000
+#define WIFI_RETRY_DELAY_MS 500
+
+// ===== Глобальные переменные =====
+
 static bool wifiConnected = false;
+
+// ===== Публичные функции =====
 
 void wifi_init() {
   Serial.println("\n=== WiFi Initialization ===");
   unsigned long start = millis();
 
-  // Отключаем режим модемы для экономии энергии
-  //WiFi.setSleep(false);
-
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-  // Устанавливаем таймаут 10 секунд вместо бесконечного ожидания
-  unsigned long timeout = 10000;  // 10 секунд
   unsigned long startTime = millis();
-  
-  while (WiFi.status() != WL_CONNECTED && (millis() - startTime) < timeout) {
-    delay(500);
+  while (WiFi.status() != WL_CONNECTED && 
+         (millis() - startTime) < WIFI_CONNECTION_TIMEOUT_MS) {
+    delay(WIFI_RETRY_DELAY_MS);
     Serial.print(".");
   }
 
@@ -45,7 +47,7 @@ void wifi_init() {
 }
 
 void wifi_loop() {
-  // Здесь можно добавить обработку событий WiFi при необходимости
+  // Резерв для будущей обработки событий WiFi
   // Например, переподключение или мониторинг клиентов
 }
 

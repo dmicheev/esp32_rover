@@ -6,10 +6,15 @@
 #include "dcmotor.h"
 #include "ui.h"
 
+// ===== Константы =====
+
+#define SERIAL_BAUD_RATE 115200
+#define SERIAL_INIT_DELAY_MS 1000
+#define LOOP_DELAY_MS 1
+
 void setup() {
-  // Инициализация последовательного порта
-  Serial.begin(115200);
-  delay(1000);
+  Serial.begin(SERIAL_BAUD_RATE);
+  delay(SERIAL_INIT_DELAY_MS);
 
   Serial.println("\n========================================");
   Serial.println("   ESP32-S3 Robot Controller v2.0");
@@ -17,19 +22,10 @@ void setup() {
 
   unsigned long totalStart = millis();
 
-  // Инициализация файловой системы LittleFS
   ui_init();
-
-  // Инициализация WiFi
   wifi_init();
-
-  // Инициализация API сервера
   api_init();
-
-  // Инициализация сервоприводов
   setup_serv();
-
-  // Инициализация DC-моторов
   setup_dc();
 
   Serial.println("\n✓ All systems initialized");
@@ -40,18 +36,7 @@ void setup() {
 }
 
 void loop() {
-  // Обработка WiFi событий
   wifi_loop();
-
-  // Обработка HTTP запросов
   api_loop();
-
-  // Обработка команд Serial (для отладки)
-  //loop_serv();
-
-  // Обработка DC-моторов
-  //loop_dc();
-
-  delay(1);
+  delay(LOOP_DELAY_MS);
 }
-
