@@ -24,20 +24,18 @@ uint16_t servo_getMin(uint8_t servoNum);
 // Получение максимального значения импульса
 uint16_t servo_getMax(uint8_t servoNum);
 
-// ===== Функции для управления камерой (сервы на 360°) =====
+// ===== Функции для управления камерой (SG92R 180°) =====
+
+// Установка угла камеры (Pan/Tilt) в градусах (0-180)
+void camera_setAngle(uint16_t panAngle, uint16_t tiltAngle);
+
+// Получение текущих углов камеры
+void camera_getAngle(uint16_t* panAngle, uint16_t* tiltAngle);
 
 // Установка точного значения PWM для камеры (для совместимости с API)
-// Для серв на 360°: вращает серву в течение короткого времени, затем останавливает
 void camera_setPWM(uint16_t panPWM, uint16_t tiltPWM);
 
-// Подача импульса PWM для камеры на заданное время (для 360° серв)
-// panPWM: значение PWM для Pan (отклонение от центра)
-// tiltPWM: значение PWM для Tilt (отклонение от центра)
-// durationMs: время импульса в миллисекундах
-void camera_pulse(uint16_t panPWM, uint16_t tiltPWM, uint16_t durationMs);
-
-// Получение текущих значений PWM камеры (для совместимости с API)
-// Возвращает центральное положение (PWM для остановки серв)
+// Получение текущих значений PWM камеры
 void camera_getPWM(uint16_t* panPWM, uint16_t* tiltPWM);
 
 #endif

@@ -28,7 +28,6 @@ extern WiFiClass WiFi;
 #define PWM_MAX_VALUE 4095
 #define MOTOR_SPEED_MIN -255
 #define MOTOR_SPEED_MAX 255
-#define MAX_PULSE_DURATION_MS 5000
 
 // ===== Глобальные объекты =====
 
@@ -223,14 +222,58 @@ void handleCalibrateServo() {
 
 void handleGetCamera() {
   api_log("GET /api/camera");
-  
+
+  uint16_t panAngle, tiltAngle;
+  camera_getAngle(&panAngle, &tiltAngle);
+
+  JsonDocument doc;
+  doc["pan_angle"] = panAngle;
+  doc["tilt_angle"] = tiltAngle;
+
+  String response;
+  serializeJson(doc, response);
+  sendJSONResponse(200, response);
+}
+
+void handleSetCameraAngle() {
+  api_log("POST /api/camera/angle");
+
+  JsonDocument doc;
+  if (!validateRequestBody(doc, "camera angle")) return;
+
+  uint16_t panAngle = doc["pan_angle"] | 90;
+  uint16_t tiltAngle = doc["tilt_angle"] | 90;
+
+  if (panAngle > 180 || tiltAngle > 180) {
+    api_log("ERROR: Invalid angle values (must be 0-180)");
+    sendJSONResponse(400, "{\"error\":\"Invalid angle (must be 0-180)\"}");
+    return;
+  }
+
+  camera_setAngle(panAngle, tiltAngle);
+  api_log("Camera set: PAN=" + String(panAngle) + "°, TILT=" + String(tiltAngle) + "°");
+
+  JsonDocument response;
+  response["success"] = true;
+  response["pan_angle"] = panAngle;
+  response["tilt_angle"] = tiltAngle;
+
+  String jsonResponse;
+  serializeJson(response, jsonResponse);
+  sendJSONResponse(200, jsonResponse);
+}
+
+// Для обратной совместимости - PWM endpoint
+void handleGetCameraPWM() {
+  api_log("GET /api/camera/pwm");
+
   uint16_t panPWM, tiltPWM;
   camera_getPWM(&panPWM, &tiltPWM);
-  
+
   JsonDocument doc;
   doc["pan_pwm"] = panPWM;
   doc["tilt_pwm"] = tiltPWM;
-  
+
   String response;
   serializeJson(doc, response);
   sendJSONResponse(200, response);
@@ -238,59 +281,26 @@ void handleGetCamera() {
 
 void handleSetCameraPWM() {
   api_log("POST /api/camera/pwm");
-  
+
   JsonDocument doc;
   if (!validateRequestBody(doc, "camera pwm")) return;
-  
-  uint16_t panPWM = doc["pan_pwm"] | 300;
-  uint16_t tiltPWM = doc["tilt_pwm"] | 300;
 
-  if (!isValidPWM(panPWM) || !isValidPWM(tiltPWM)) {
+  uint16_t panPWM = doc["pan_pwm"] | 1435;
+  uint16_t tiltPWM = doc["tilt_pwm"] | 1435;
+
+  if (panPWM > 4095 || tiltPWM > 4095) {
     api_log("ERROR: Invalid PWM values");
     sendJSONResponse(400, "{\"error\":\"Invalid PWM values (must be 0-4095)\"}");
     return;
   }
 
   camera_setPWM(panPWM, tiltPWM);
-  api_log("Camera set: PAN=" + String(panPWM) + ", TILT=" + String(tiltPWM));
+  api_log("Camera PWM set: PAN=" + String(panPWM) + ", TILT=" + String(tiltPWM));
 
   JsonDocument response;
   response["success"] = true;
   response["pan_pwm"] = panPWM;
   response["tilt_pwm"] = tiltPWM;
-
-  String jsonResponse;
-  serializeJson(response, jsonResponse);
-  sendJSONResponse(200, jsonResponse);
-}
-
-void handleCameraPulse() {
-  api_log("POST /api/camera/pulse");
-
-  JsonDocument doc;
-  if (!validateRequestBody(doc, "camera pulse")) return;
-
-  uint16_t panPWM = doc["pan_pwm"] | 300;
-  uint16_t tiltPWM = doc["tilt_pwm"] | 300;
-  uint16_t durationMs = doc["duration_ms"] | 100;
-
-  durationMs = constrain(durationMs, 0, MAX_PULSE_DURATION_MS);
-
-  if (!isValidPWM(panPWM) || !isValidPWM(tiltPWM)) {
-    api_log("ERROR: Invalid PWM values");
-    sendJSONResponse(400, "{\"error\":\"Invalid PWM values (must be 0-4095)\"}");
-    return;
-  }
-
-  camera_pulse(panPWM, tiltPWM, durationMs);
-  api_log("Camera pulse: PAN=" + String(panPWM) + ", TILT=" + String(tiltPWM) + 
-          ", Duration=" + String(durationMs) + "ms");
-
-  JsonDocument response;
-  response["success"] = true;
-  response["pan_pwm"] = panPWM;
-  response["tilt_pwm"] = tiltPWM;
-  response["duration_ms"] = durationMs;
 
   String jsonResponse;
   serializeJson(response, jsonResponse);
@@ -411,8 +421,9 @@ void api_init() {
   
   // Маршруты для управления камерой
   server.on("/api/camera", HTTP_GET, handleGetCamera);
+  server.on("/api/camera/angle", HTTP_POST, handleSetCameraAngle);
+  server.on("/api/camera/pwm", HTTP_GET, handleGetCameraPWM);
   server.on("/api/camera/pwm", HTTP_POST, handleSetCameraPWM);
-  server.on("/api/camera/pulse", HTTP_POST, handleCameraPulse);
 
   // Маршруты для управления моторами
   server.on("/api/motor", HTTP_GET, handleGetMotors);

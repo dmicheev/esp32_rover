@@ -15,9 +15,11 @@
 #define PWM_MIN_VALUE 0
 #define PWM_MAX_VALUE 4095
 
-#define CAMERA_CENTER_PWM 300
-#define CAMERA_MIN_PWM 200
-#define CAMERA_MAX_PWM 400
+// SG92R 180°: типичные значения PWM для 50Hz
+// 0° ≈ 500 (1ms), 90° ≈ 1435 (1.5ms), 180° ≈ 2370 (2ms)
+#define SG92R_PWM_MIN 500
+#define SG92R_PWM_MAX 2370
+#define SG92R_PWM_CENTER 1435
 
 // Опциональный макрос для отладочного вывода
 // Раскомментируйте для включения подробных сообщений
@@ -44,8 +46,8 @@ struct ServoConfig {
 };
 
 struct CameraConfig {
-  uint16_t panCenter;
-  uint16_t tiltCenter;
+  uint16_t panAngle;
+  uint16_t tiltAngle;
   uint16_t panMin;
   uint16_t panMax;
   uint16_t tiltMin;
@@ -57,12 +59,12 @@ struct CameraConfig {
 ServoConfig servoConfigs[MAX_SERVOS];
 int correction[MAX_SERVOS] = SERVO_CORRECTION;
 CameraConfig cameraConfig = {
-  .panCenter = CAMERA_CENTER_PWM,
-  .tiltCenter = CAMERA_CENTER_PWM,
-  .panMin = CAMERA_MIN_PWM,
-  .panMax = CAMERA_MAX_PWM,
-  .tiltMin = CAMERA_MIN_PWM,
-  .tiltMax = CAMERA_MAX_PWM,
+  .panAngle = 90,
+  .tiltAngle = 90,
+  .panMin = SG92R_PWM_MIN,
+  .panMax = SG92R_PWM_MAX,
+  .tiltMin = SG92R_PWM_MIN,
+  .tiltMax = SG92R_PWM_MAX,
 };
 
 String inputString = "";
@@ -72,12 +74,6 @@ String inputString = "";
 // Проверка валидности номера сервопривода
 static bool isValidServoNum(uint8_t servoNum) {
   return servoNum < MAX_SERVOS;
-}
-
-// Ограничение PWM значений камеры
-static void constrainCameraPWM(uint16_t& panPWM, uint16_t& tiltPWM) {
-  panPWM = constrain(panPWM, cameraConfig.panMin, cameraConfig.panMax);
-  tiltPWM = constrain(tiltPWM, cameraConfig.tiltMin, cameraConfig.tiltMax);
 }
 
 // Вывод отладочной информации о сервоприводе
@@ -165,40 +161,60 @@ uint16_t servo_getMax(uint8_t servoNum) {
 
 // ===== Функции управления камерой =====
 
-void camera_setPWM(uint16_t panPWM, uint16_t tiltPWM) {
-  constrainCameraPWM(panPWM, tiltPWM);
-  
+// Преобразование угла (0-180) в PWM значение
+static uint16_t angleToPWM(uint16_t angle, uint16_t minPWM, uint16_t maxPWM) {
+  return map(angle, 0, 180, minPWM, maxPWM);
+}
+
+void camera_setAngle(uint16_t panAngle, uint16_t tiltAngle) {
+  panAngle = constrain(panAngle, 0, 180);
+  tiltAngle = constrain(tiltAngle, 0, 180);
+
+  uint16_t panPWM = angleToPWM(panAngle, cameraConfig.panMin, cameraConfig.panMax);
+  uint16_t tiltPWM = angleToPWM(tiltAngle, cameraConfig.tiltMin, cameraConfig.tiltMax);
+
   pwm.setPWM(CAMERA_PAN_CHANNEL, 0, panPWM);
   pwm.setPWM(CAMERA_TILT_CHANNEL, 0, tiltPWM);
-  
+
+  cameraConfig.panAngle = panAngle;
+  cameraConfig.tiltAngle = tiltAngle;
+
   DEBUG_PRINT("Camera set: PAN=");
+  DEBUG_PRINT(panAngle);
+  DEBUG_PRINT("° (");
+  DEBUG_PRINT(panPWM);
+  DEBUG_PRINT("), TILT=");
+  DEBUG_PRINT(tiltAngle);
+  DEBUG_PRINT("° (");
+  DEBUG_PRINT(tiltPWM);
+  DEBUG_PRINTLN(")");
+}
+
+void camera_getAngle(uint16_t* panAngle, uint16_t* tiltAngle) {
+  if (panAngle) *panAngle = cameraConfig.panAngle;
+  if (tiltAngle) *tiltAngle = cameraConfig.tiltAngle;
+}
+
+void camera_setPWM(uint16_t panPWM, uint16_t tiltPWM) {
+  panPWM = constrain(panPWM, SG92R_PWM_MIN, SG92R_PWM_MAX);
+  tiltPWM = constrain(tiltPWM, SG92R_PWM_MIN, SG92R_PWM_MAX);
+
+  pwm.setPWM(CAMERA_PAN_CHANNEL, 0, panPWM);
+  pwm.setPWM(CAMERA_TILT_CHANNEL, 0, tiltPWM);
+
+  DEBUG_PRINT("Camera set PWM: PAN=");
   DEBUG_PRINT(panPWM);
   DEBUG_PRINT(", TILT=");
   DEBUG_PRINTLN(tiltPWM);
 }
 
-void camera_pulse(uint16_t panPWM, uint16_t tiltPWM, uint16_t durationMs) {
-  constrainCameraPWM(panPWM, tiltPWM);
-  
-  pwm.setPWM(CAMERA_PAN_CHANNEL, 0, panPWM);
-  pwm.setPWM(CAMERA_TILT_CHANNEL, 0, tiltPWM);
-  
-  DEBUG_PRINT("Camera pulse: PAN=");
-  DEBUG_PRINT(panPWM);
-  DEBUG_PRINT(", TILT=");
-  DEBUG_PRINT(tiltPWM);
-  DEBUG_PRINT(", Duration=");
-  DEBUG_PRINT(durationMs);
-  DEBUG_PRINTLN("ms");
-  
-  delay(durationMs);
-  
-  DEBUG_PRINTLN("Camera stopped (center position)");
-}
-
 void camera_getPWM(uint16_t* panPWM, uint16_t* tiltPWM) {
-  if (panPWM) *panPWM = cameraConfig.panCenter;
-  if (tiltPWM) *tiltPWM = cameraConfig.tiltCenter;
+  if (panPWM) {
+    *panPWM = angleToPWM(cameraConfig.panAngle, cameraConfig.panMin, cameraConfig.panMax);
+  }
+  if (tiltPWM) {
+    *tiltPWM = angleToPWM(cameraConfig.tiltAngle, cameraConfig.tiltMin, cameraConfig.tiltMax);
+  }
 }
 
 // ===== Инициализация и цикл =====
@@ -235,9 +251,9 @@ void setup_serv() {
     servo_setAngle(i, 90);
     delay(100);
   }
-  
-  camera_setPWM(cameraConfig.panCenter, cameraConfig.tiltCenter);
-  
+
+  camera_setAngle(90, 90);
+
   Serial.println("\n=== System Ready ===");
 }
 
