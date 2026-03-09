@@ -12,14 +12,10 @@
 
 #define SERVO_ANGLE_MIN 20
 #define SERVO_ANGLE_MAX 160
-#define PWM_MIN_VALUE 0
-#define PWM_MAX_VALUE 4095
 
 // SG92R 180°: типичные значения PWM для 50Hz
-// 0° ≈ 500 (1ms), 90° ≈ 1435 (1.5ms), 180° ≈ 2370 (2ms)
-#define SG92R_PWM_MIN 500
-#define SG92R_PWM_MAX 2370
-#define SG92R_PWM_CENTER 1435
+#define SG92R_PWM_MIN 140
+#define SG92R_PWM_MAX 480
 
 // Опциональный макрос для отладочного вывода
 // Раскомментируйте для включения подробных сообщений
@@ -58,6 +54,7 @@ struct CameraConfig {
 
 ServoConfig servoConfigs[MAX_SERVOS];
 int correction[MAX_SERVOS] = SERVO_CORRECTION;
+
 CameraConfig cameraConfig = {
   .panAngle = 90,
   .tiltAngle = 90,
@@ -129,7 +126,7 @@ void servo_setLimits(uint8_t servoNum, uint16_t newMin, uint16_t newMax) {
     return;
   }
   
-  if (newMin > PWM_MAX_VALUE || newMax > PWM_MAX_VALUE) {
+  if (newMin > DEFAULT_SERVOMAX || newMax > DEFAULT_SERVOMAX) {
     DEBUG_PRINTLN("Error: Values must be between 0 and 4095");
     return;
   }
