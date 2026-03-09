@@ -129,8 +129,6 @@ void handleGetServos() {
     JsonObject servo = servos.add<JsonObject>();
     servo["id"] = i;
     servo["angle"] = servo_getAngle(i);
-    servo["min"] = servo_getMin(i);
-    servo["max"] = servo_getMax(i);
   }
   
   String response;
@@ -168,50 +166,6 @@ void handleSetServo() {
   response["success"] = true;
   response["servo"] = id;
   response["angle"] = angle;
-  
-  String jsonResponse;
-  serializeJson(response, jsonResponse);
-  sendJSONResponse(200, jsonResponse);
-}
-
-void handleCalibrateServo() {
-  api_log("POST /api/servo/calibrate");
-  
-  JsonDocument doc;
-  if (!validateRequestBody(doc, "calibrate")) return;
-  
-  int id = doc["id"] | -1;
-  int minVal = doc["min"] | -1;
-  int maxVal = doc["max"] | -1;
-  
-  api_log("Servo ID: " + String(id) + ", Min: " + String(minVal) + ", Max: " + String(maxVal));
-  
-  if (id < SERVO_ID_MIN || id > SERVO_ID_MAX) {
-    api_log("ERROR: Invalid servo ID: " + String(id));
-    sendJSONResponse(400, "{\"error\":\"Invalid servo ID\"}");
-    return;
-  }
-  
-  if (!isValidPWM(minVal) || !isValidPWM(maxVal)) {
-    api_log("ERROR: Invalid pulse values");
-    sendJSONResponse(400, "{\"error\":\"Invalid pulse values (must be 0-4095)\"}");
-    return;
-  }
-  
-  if (minVal >= maxVal) {
-    api_log("ERROR: min must be less than max");
-    sendJSONResponse(400, "{\"error\":\"min must be less than max\"}");
-    return;
-  }
-  
-  servo_setLimits(id, minVal, maxVal);
-  api_log("Servo " + String(id) + " calibrated: min=" + String(minVal) + ", max=" + String(maxVal));
-  
-  JsonDocument response;
-  response["success"] = true;
-  response["servo"] = id;
-  response["min"] = minVal;
-  response["max"] = maxVal;
   
   String jsonResponse;
   serializeJson(response, jsonResponse);
@@ -417,7 +371,6 @@ void api_init() {
   server.on("/api/status", HTTP_GET, handleStatus);
   server.on("/api/servo", HTTP_GET, handleGetServos);
   server.on("/api/servo", HTTP_POST, handleSetServo);
-  server.on("/api/servo/calibrate", HTTP_POST, handleCalibrateServo);
   
   // Маршруты для управления камерой
   server.on("/api/camera", HTTP_GET, handleGetCamera);

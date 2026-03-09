@@ -43,26 +43,6 @@ async function setServo(id) {
   }
 }
 
-async function calibrateServo(id) {
-  const minVal = document.getElementById('servo' + id + '-min').value;
-  const maxVal = document.getElementById('servo' + id + '-max').value;
-  try {
-    const response = await fetch(API_BASE + '/api/servo/calibrate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: id, min: parseInt(minVal), max: parseInt(maxVal) })
-    });
-    const result = await response.json();
-    if (result.success) {
-      showMessage('Servo ' + id + ' откалиброван', 'success');
-    } else {
-      showMessage('Ошибка: ' + result.error, 'error');
-    }
-  } catch (error) {
-    showMessage('Ошибка соединения: ' + error, 'error');
-  }
-}
-
 async function startMotor(motor, speed) {
   try {
     const response = await fetch(API_BASE + '/api/motor', {
@@ -238,8 +218,6 @@ async function loadServos() {
         const id = servo.id;
         document.getElementById('servo' + id).value = servo.angle;
         document.getElementById('servo' + id + '-value').textContent = servo.angle;
-        document.getElementById('servo' + id + '-min').value = servo.min;
-        document.getElementById('servo' + id + '-max').value = servo.max;
       });
     }
   } catch (error) {

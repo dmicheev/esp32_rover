@@ -14,7 +14,6 @@
 [API] GET /api/status
 [API] GET /api/servo
 [API] POST /api/servo
-[API] POST /api/servo/calibrate
 [API] GET /api/motor
 [API] POST /api/motor
 [API] POST /api/motor/stop

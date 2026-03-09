@@ -36,8 +36,6 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40, Wire);
 // ===== Структуры данных =====
 
 struct ServoConfig {
-  uint16_t minPulse;
-  uint16_t maxPulse;
   uint16_t currentAngle;
 };
 
@@ -73,21 +71,6 @@ static bool isValidServoNum(uint8_t servoNum) {
   return servoNum < MAX_SERVOS;
 }
 
-// Вывод отладочной информации о сервоприводе
-static void printServoDebug(uint8_t servoNum, uint16_t angle, uint16_t pulse,
-                            uint16_t minPulse, uint16_t maxPulse) {
-  DEBUG_PRINT("Servo ");
-  DEBUG_PRINT(servoNum);
-  DEBUG_PRINT(" -> ");
-  DEBUG_PRINT(angle);
-  DEBUG_PRINT("° (pulse: ");
-  DEBUG_PRINT(pulse);
-  DEBUG_PRINT(", min:");
-  DEBUG_PRINT(minPulse);
-  DEBUG_PRINT(", max:");
-  DEBUG_PRINT(maxPulse);
-  DEBUG_PRINTLN(")");
-}
 
 // ===== Публичные функции API =====
 
@@ -100,60 +83,21 @@ void servo_setAngle(uint8_t servoNum, uint16_t angle) {
   angle = constrain(angle, SERVO_ANGLE_MIN, SERVO_ANGLE_MAX);
   int realAngle = angle + correction[servoNum];
   
-  uint16_t minPulse = servoConfigs[servoNum].minPulse;
-  uint16_t maxPulse = servoConfigs[servoNum].maxPulse;
-  uint16_t pulse = map(realAngle, 0, 180, minPulse, maxPulse);
+  uint16_t pulse = map(realAngle, 0, 180, SG92R_PWM_MIN, SG92R_PWM_MAX);
   
   pwm.setPWM(servoNum, 0, pulse);
   servoConfigs[servoNum].currentAngle = angle;
   
-  printServoDebug(servoNum, angle, pulse, minPulse, maxPulse);
+  DEBUG_PRINT("Servo ");
+  DEBUG_PRINT(servoNum);
+  DEBUG_PRINT(" -> ");
+  DEBUG_PRINT(angle);
+  DEBUG_PRINTLN("°");
 }
 
 uint16_t servo_getAngle(uint8_t servoNum) {
   if (!isValidServoNum(servoNum)) return 0;
   return servoConfigs[servoNum].currentAngle;
-}
-
-void servo_setLimits(uint8_t servoNum, uint16_t newMin, uint16_t newMax) {
-  if (!isValidServoNum(servoNum)) {
-    DEBUG_PRINTLN("Error: Servo number out of range");
-    return;
-  }
-  
-  if (newMin >= newMax) {
-    DEBUG_PRINTLN("Error: MIN must be less than MAX");
-    return;
-  }
-  
-  if (newMin > DEFAULT_SERVOMAX || newMax > DEFAULT_SERVOMAX) {
-    DEBUG_PRINTLN("Error: Values must be between 0 and 4095");
-    return;
-  }
-  
-  servoConfigs[servoNum].minPulse = newMin;
-  servoConfigs[servoNum].maxPulse = newMax;
-  
-  DEBUG_PRINT("Servo ");
-  DEBUG_PRINT(servoNum);
-  DEBUG_PRINT(" limits updated: MIN=");
-  DEBUG_PRINT(newMin);
-  DEBUG_PRINT(", MAX=");
-  DEBUG_PRINTLN(newMax);
-  
-  if (servoConfigs[servoNum].currentAngle > 0) {
-    servo_setAngle(servoNum, servoConfigs[servoNum].currentAngle);
-  }
-}
-
-uint16_t servo_getMin(uint8_t servoNum) {
-  if (!isValidServoNum(servoNum)) return DEFAULT_SERVOMIN;
-  return servoConfigs[servoNum].minPulse;
-}
-
-uint16_t servo_getMax(uint8_t servoNum) {
-  if (!isValidServoNum(servoNum)) return DEFAULT_SERVOMAX;
-  return servoConfigs[servoNum].maxPulse;
 }
 
 // ===== Функции управления камерой =====
@@ -238,8 +182,6 @@ void setup_serv() {
   Serial.println("PWM frequency set to 50Hz");
   
   for (int i = 0; i < MAX_SERVOS; i++) {
-    servoConfigs[i].minPulse = DEFAULT_SERVOMIN;
-    servoConfigs[i].maxPulse = DEFAULT_SERVOMAX;
     servoConfigs[i].currentAngle = 0;
   }
   

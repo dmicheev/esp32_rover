@@ -111,14 +111,6 @@
 {"id": 0, "angle": 90}
 ```
 
-#### POST /api/servo/calibrate
-Калибровка границ сервопривода.
-
-**Запрос:**
-```json
-{"id": 0, "min": 140, "max": 480}
-```
-
 ### Моторы
 
 #### GET /api/motor
@@ -188,11 +180,6 @@ curl http://192.168.4.1:8080/api/servo
 curl -X POST http://192.168.4.1:8080/api/servo \
   -H "Content-Type: application/json" \
   -d '{"id":0,"angle":90}'
-
-# Калибровка
-curl -X POST http://192.168.4.1:8080/api/servo/calibrate \
-  -H "Content-Type: application/json" \
-  -d '{"id":0,"min":140,"max":480}'
 
 # Моторы
 curl -X POST http://192.168.4.1:8080/api/motor \
