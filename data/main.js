@@ -191,10 +191,10 @@ async function stopAllMotors() {
 async function emergencyStopAll() {
   try {
     await fetch(API_BASE + '/api/motor/stop', { method: 'POST' });
-    await fetch(API_BASE + '/api/camera/pwm', {
+    await fetch(API_BASE + '/api/camera/angle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pan_pwm: 300, tilt_pwm: 300 })
+      body: JSON.stringify({ pan_angle: 90, tilt_angle: 90 })
     });
 
     document.getElementById('motorA-speed').textContent = '0';
@@ -206,18 +206,12 @@ async function emergencyStopAll() {
     updateMotorValue('C', 0);
     updateMotorValue('D', 0);
 
-    document.getElementById('pan-pwm-slider').value = 300;
-    document.getElementById('pan-pwm-input').value = 300;
-    document.getElementById('pan-pwm-value').textContent = '300';
-    document.getElementById('pan-duration-slider').value = 100;
-    document.getElementById('pan-duration-input').value = 100;
-    document.getElementById('pan-duration-value').textContent = '100';
-    document.getElementById('tilt-pwm-slider').value = 300;
-    document.getElementById('tilt-pwm-input').value = 300;
-    document.getElementById('tilt-pwm-value').textContent = '300';
-    document.getElementById('tilt-duration-slider').value = 100;
-    document.getElementById('tilt-duration-input').value = 100;
-    document.getElementById('tilt-duration-value').textContent = '100';
+    document.getElementById('pan-angle-slider').value = 90;
+    document.getElementById('pan-angle-input').value = 90;
+    document.getElementById('pan-angle-value').textContent = '90';
+    document.getElementById('tilt-angle-slider').value = 90;
+    document.getElementById('tilt-angle-input').value = 90;
+    document.getElementById('tilt-angle-value').textContent = '90';
 
     showMessage('🚨 ЭКСТРЕННАЯ ОСТАНОВКА выполнена!', 'success');
   } catch (error) {
@@ -601,7 +595,7 @@ async function loadCameraStatus() {
     const cameraIp = document.getElementById('camera-ip').value || '192.168.1.111:81';
     const cameraUrl = 'http://' + cameraIp + '/';
     document.getElementById('camera-stream').src = cameraUrl;
-    
+
     // Обновляем отображение URL в сообщении об ошибке
     const urlDisplay = document.getElementById('camera-url-display');
     if (urlDisplay) {
@@ -611,15 +605,15 @@ async function loadCameraStatus() {
     const response = await fetch(API_BASE + '/api/camera');
     const result = await response.json();
 
-    const panPwm = result.pan_pwm || 300;
-    const tiltPwm = result.tilt_pwm || 300;
-    
-    document.getElementById('pan-pwm-slider').value = panPwm;
-    document.getElementById('pan-pwm-input').value = panPwm;
-    document.getElementById('pan-pwm-value').textContent = panPwm;
-    document.getElementById('tilt-pwm-slider').value = tiltPwm;
-    document.getElementById('tilt-pwm-input').value = tiltPwm;
-    document.getElementById('tilt-pwm-value').textContent = tiltPwm;
+    const panAngle = result.pan_angle || 90;
+    const tiltAngle = result.tilt_angle || 90;
+
+    document.getElementById('pan-angle-slider').value = panAngle;
+    document.getElementById('pan-angle-input').value = panAngle;
+    document.getElementById('pan-angle-value').textContent = panAngle;
+    document.getElementById('tilt-angle-slider').value = tiltAngle;
+    document.getElementById('tilt-angle-input').value = tiltAngle;
+    document.getElementById('tilt-angle-value').textContent = tiltAngle;
   } catch (error) {
     console.error('Error loading camera status:', error);
   }
@@ -639,71 +633,61 @@ function updateCameraUrl() {
   showMessage('URL камеры обновлён: ' + cameraUrl, 'success');
 }
 
-function updatePanPwmDisplay(value) {
-  document.getElementById('pan-pwm-value').textContent = value;
-  document.getElementById('pan-pwm-input').value = value;
+function updatePanAngleDisplay(value) {
+  document.getElementById('pan-angle-value').textContent = value;
+  document.getElementById('pan-angle-input').value = value;
 }
 
-function updateTiltPwmDisplay(value) {
-  document.getElementById('tilt-pwm-value').textContent = value;
-  document.getElementById('tilt-pwm-input').value = value;
+function updateTiltAngleDisplay(value) {
+  document.getElementById('tilt-angle-value').textContent = value;
+  document.getElementById('tilt-angle-input').value = value;
 }
 
-function updatePanDurationDisplay(value) {
-  document.getElementById('pan-duration-value').textContent = value;
-  document.getElementById('pan-duration-input').value = value;
-}
+async function setCameraAngle() {
+  const panAngle = parseInt(document.getElementById('pan-angle-input').value);
+  const tiltAngle = parseInt(document.getElementById('tilt-angle-input').value);
 
-function updateTiltDurationDisplay(value) {
-  document.getElementById('tilt-duration-value').textContent = value;
-  document.getElementById('tilt-duration-input').value = value;
-}
-
-async function setCameraPulse() {
-  const panPwm = parseInt(document.getElementById('pan-pwm-input').value);
-  const tiltPwm = parseInt(document.getElementById('tilt-pwm-input').value);
-  const panDuration = parseInt(document.getElementById('pan-duration-input').value);
-  const tiltDuration = parseInt(document.getElementById('tilt-duration-input').value);
-
-  if (panPwm < 200 || panPwm > 400 || tiltPwm < 200 || tiltPwm > 400) {
-    showMessage('Ошибка: ШИМ должен быть от 200 до 400', 'error');
-    return;
-  }
-
-  if (panDuration < 10 || panDuration > 5000 || tiltDuration < 10 || tiltDuration > 5000) {
-    showMessage('Ошибка: Время должно быть от 10 до 5000 мс', 'error');
+  if (panAngle < 0 || panAngle > 180 || tiltAngle < 0 || tiltAngle > 180) {
+    showMessage('Ошибка: Угол должен быть от 0 до 180°', 'error');
     return;
   }
 
   try {
-    // Отправляем импульс для Pan
-    await fetch(API_BASE + '/api/camera/pulse', {
+    const response = await fetch(API_BASE + '/api/camera/angle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pan_pwm: panPwm, tilt_pwm: 300, duration_ms: panDuration })
+      body: JSON.stringify({ pan_angle: panAngle, tilt_angle: tiltAngle })
     });
-
-    // Отправляем импульс для Tilt
-    await fetch(API_BASE + '/api/camera/pulse', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pan_pwm: 300, tilt_pwm: tiltPwm, duration_ms: tiltDuration })
-    });
-
-    showMessage('Импульс отправлен: Pan=' + panPwm + ' (' + panDuration + 'мс), Tilt=' + tiltPwm + ' (' + tiltDuration + 'мс)', 'success');
+    const result = await response.json();
+    if (result.success) {
+      showMessage('Камера установлена: Pan=' + panAngle + '°, Tilt=' + tiltAngle + '°', 'success');
+    } else {
+      showMessage('Ошибка: ' + result.error, 'error');
+    }
   } catch (error) {
     showMessage('Ошибка соединения: ' + error, 'error');
   }
 }
 
-async function setCameraPulsePreset(panPwm, tiltPwm, durationMs) {
+async function setCameraAnglePreset(panAngle, tiltAngle) {
   try {
-    await fetch(API_BASE + '/api/camera/pulse', {
+    const response = await fetch(API_BASE + '/api/camera/angle', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pan_pwm: panPwm, tilt_pwm: tiltPwm, duration_ms: durationMs })
+      body: JSON.stringify({ pan_angle: panAngle, tilt_angle: tiltAngle })
     });
-    showMessage('Пресет применён: Pan=' + panPwm + ', Tilt=' + tiltPwm + ', Duration=' + durationMs + 'мс', 'success');
+    const result = await response.json();
+    if (result.success) {
+      document.getElementById('pan-angle-slider').value = panAngle;
+      document.getElementById('pan-angle-input').value = panAngle;
+      document.getElementById('pan-angle-value').textContent = panAngle;
+      document.getElementById('tilt-angle-slider').value = tiltAngle;
+      document.getElementById('tilt-angle-input').value = tiltAngle;
+      document.getElementById('tilt-angle-value').textContent = tiltAngle;
+      showMessage('Пресет применён: Pan=' + panAngle + '°, Tilt=' + tiltAngle + '°', 'success');
+    } else {
+      showMessage('Ошибка: ' + result.error, 'error');
+    }
   } catch (error) {
     showMessage('Ошибка соединения: ' + error, 'error');
   }
@@ -713,8 +697,8 @@ async function setCameraPWM() {
   const panPwm = parseInt(document.getElementById('pan-pwm-input').value);
   const tiltPwm = parseInt(document.getElementById('tilt-pwm-input').value);
 
-  if (panPwm < 200 || panPwm > 400 || tiltPwm < 200 || tiltPwm > 400) {
-    showMessage('Ошибка: ШИМ должен быть от 200 до 400', 'error');
+  if (panPwm < 500 || panPwm > 2370 || tiltPwm < 500 || tiltPwm > 2370) {
+    showMessage('Ошибка: ШИМ должен быть от 500 до 2370', 'error');
     return;
   }
 

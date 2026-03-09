@@ -548,17 +548,17 @@
         <div class="joystick-panel">
           <h2>🎮 Ручное управление ШИМ</h2>
 
-          <!-- Информация о ШИМ -->
+          <!-- Информация о SG92R -->
           <div class="info-box">
-            <h4>📖 Информация о значениях ШИМ (360°)</h4>
+            <h4>📖 Информация о SG92R (180°)</h4>
             <ul>
-              <li><strong>Тип сервопривода:</strong> 360° непрерывного вращения</li>
-              <li><strong>Диапазон ШИМ:</strong> 200 - 400 (12-bit PCA9685)</li>
-              <li><strong>Центральное положение (стоп):</strong> 300</li>
-              <li><strong>Минимальное значение:</strong> 200 (вращение влево/вниз)</li>
-              <li><strong>Максимальное значение:</strong> 400 (вращение вправо/вверх)</li>
-              <li><strong>Режим работы:</strong> Импульс + время (подача импульса на заданное время, затем остановка)</li>
-              <li><strong>Примечание:</strong> 360° сервоприводы вращаются непрерывно при отклонении от центра</li>
+              <li><strong>Тип сервопривода:</strong> SG92R 180° позиционные</li>
+              <li><strong>Диапазон углов:</strong> 0 - 180°</li>
+              <li><strong>Центральное положение:</strong> 90°</li>
+              <li><strong>Диапазон PWM:</strong> 500 - 2370 (12-bit PCA9685)</li>
+              <li><strong>0° ≈ PWM 500 (1ms), 90° ≈ PWM 1435 (1.5ms), 180° ≈ PWM 2370 (2ms)</strong></li>
+              <li><strong>Режим работы:</strong> Позиционный (установка угла)</li>
+              <li><strong>Примечание:</strong> SG92R сервоприводы устанавливаются на конкретный угол</li>
             </ul>
           </div>
 
@@ -568,33 +568,20 @@
 
             <div style="margin-bottom: 15px;">
               <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">
-                ШИМ значение: <span id="pan-pwm-value" style="color: #00d9ff; font-weight: bold;">300</span>
+                Угол: <span id="pan-angle-value" style="color: #00d9ff; font-weight: bold;">90</span>°
               </label>
-              <input type="range" id="pan-pwm-slider" min="200" max="400" value="300" oninput="updatePanPwmDisplay(this.value)"
+              <input type="range" id="pan-angle-slider" min="0" max="180" value="90" oninput="updatePanAngleDisplay(this.value)"
                 style="width: 100%;">
               <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                200 ← влево | 300 = центр (стоп) | 400 вправо →
-              </div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-              <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">
-                Время импульса (мс): <span id="pan-duration-value" style="color: #00d9ff; font-weight: bold;">100</span>
-              </label>
-              <input type="range" id="pan-duration-slider" min="10" max="1000" value="100" oninput="updatePanDurationDisplay(this.value)"
-                style="width: 100%;">
-              <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                10 ← короткий | 100 средний | 1000 длинный →
+                0° ← влево | 90° = центр | 180° вправо →
               </div>
             </div>
 
             <div style="display: flex; gap: 10px;">
-              <input type="number" id="pan-pwm-input" min="200" max="400" value="300" placeholder="200-400"
+              <input type="number" id="pan-angle-input" min="0" max="180" value="90" placeholder="0-180"
                 style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; font-size: 16px;">
-              <input type="number" id="pan-duration-input" min="10" max="1000" value="100" placeholder="10-1000"
-                style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; font-size: 16px;">
-              <button onclick="setCameraPulse()"
-                style="padding: 10px 20px; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Пульс</button>
+              <button onclick="setCameraAngle()"
+                style="padding: 10px 20px; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Установить</button>
             </div>
           </div>
 
@@ -604,64 +591,51 @@
 
             <div style="margin-bottom: 15px;">
               <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">
-                ШИМ значение: <span id="tilt-pwm-value" style="color: #00d9ff; font-weight: bold;">300</span>
+                Угол: <span id="tilt-angle-value" style="color: #00d9ff; font-weight: bold;">90</span>°
               </label>
-              <input type="range" id="tilt-pwm-slider" min="200" max="400" value="300" oninput="updateTiltPwmDisplay(this.value)"
+              <input type="range" id="tilt-angle-slider" min="0" max="180" value="90" oninput="updateTiltAngleDisplay(this.value)"
                 style="width: 100%;">
               <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                200 ← вниз | 300 = центр (стоп) | 400 вверх →
-              </div>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-              <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 14px;">
-                Время импульса (мс): <span id="tilt-duration-value" style="color: #00d9ff; font-weight: bold;">100</span>
-              </label>
-              <input type="range" id="tilt-duration-slider" min="10" max="1000" value="100" oninput="updateTiltDurationDisplay(this.value)"
-                style="width: 100%;">
-              <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                10 ← короткий | 100 средний | 1000 длинный →
+                0° ← вниз | 90° = центр | 180° вверх →
               </div>
             </div>
 
             <div style="display: flex; gap: 10px;">
-              <input type="number" id="tilt-pwm-input" min="200" max="400" value="300" placeholder="200-400"
+              <input type="number" id="tilt-angle-input" min="0" max="180" value="90" placeholder="0-180"
                 style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; font-size: 16px;">
-              <input type="number" id="tilt-duration-input" min="10" max="1000" value="100" placeholder="10-1000"
-                style="flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; font-size: 16px;">
-              <button onclick="setCameraPulse()"
-                style="padding: 10px 20px; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Пульс</button>
+              <button onclick="setCameraAngle()"
+                style="padding: 10px 20px; background: #00d9ff; color: #1a1a2e; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Установить</button>
             </div>
           </div>
 
           <!-- Быстрые пресеты -->
           <div style="padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <h3 style="color: #ffcc00; margin-bottom: 15px; font-size: 16px;">⚡ Быстрые пресеты (импульс 100мс)</h3>
+            <h3 style="color: #ffcc00; margin-bottom: 15px; font-size: 16px;">⚡ Быстрые пресеты</h3>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-              <button onclick="setCameraPulsePreset(300, 300, 100)"
+              <button onclick="setCameraAnglePreset(90, 90)"
                 style="padding: 12px; background: rgba(0, 255, 136, 0.2); border: 1px solid #00ff88; border-radius: 8px; color: #00ff88; cursor: pointer; font-weight: bold;">
-                🎯 Центр (300, 300)
+                🎯 Центр (90°, 90°)
               </button>
-              <button onclick="setCameraPulsePreset(250, 300, 100)"
+              <button onclick="setCameraAnglePreset(45, 90)"
                 style="padding: 12px; background: rgba(0, 217, 255, 0.2); border: 1px solid #00d9ff; border-radius: 8px; color: #00d9ff; cursor: pointer; font-weight: bold;">
-                ◀ Влево (250, 300)
+                ◀ Влево (45°, 90°)
               </button>
-              <button onclick="setCameraPulsePreset(350, 300, 100)"
+              <button onclick="setCameraAnglePreset(135, 90)"
                 style="padding: 12px; background: rgba(0, 217, 255, 0.2); border: 1px solid #00d9ff; border-radius: 8px; color: #00d9ff; cursor: pointer; font-weight: bold;">
-                Вправо ▶ (350, 300)
+                Вправо ▶ (135°, 90°)
               </button>
-              <button onclick="setCameraPulsePreset(300, 250, 100)"
+              <button onclick="setCameraAnglePreset(90, 45)"
                 style="padding: 12px; background: rgba(0, 217, 255, 0.2); border: 1px solid #00d9ff; border-radius: 8px; color: #00d9ff; cursor: pointer; font-weight: bold;">
-                ▼ Вниз (300, 250)
+                ▼ Вниз (90°, 45°)
               </button>
-              <button onclick="setCameraPulsePreset(300, 350, 100)"
+              <button onclick="setCameraAnglePreset(90, 135)"
                 style="padding: 12px; background: rgba(0, 217, 255, 0.2); border: 1px solid #00d9ff; border-radius: 8px; color: #00d9ff; cursor: pointer; font-weight: bold;">
-                ▲ Вверх (300, 350)
+                ▲ Вверх (90°, 135°)
               </button>
-              <button onclick="setCameraPulsePreset(250, 250, 100)"
+              <button onclick="setCameraAnglePreset(45, 45)"
                 style="padding: 12px; background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00; border-radius: 8px; color: #ffcc00; cursor: pointer; font-weight: bold;">
-                ⬅️↘️ Лево-Вниз (250, 250)
+                ⬅️↘️ Лево-Вниз (45°, 45°)
               </button>
             </div>
           </div>
