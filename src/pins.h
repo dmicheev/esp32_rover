@@ -1,8 +1,13 @@
 #ifndef _PINS_H
 #define _PINS_H
 
+// 1 I2C контроллер на нем SERVO
 #define I2C_SDA 8
 #define I2C_SCL 9
+
+// 2 I2C контроллер на нем LIDAR
+#define I2C2_SDA 8
+#define I2C2_SCL 9
 
 // Пины для управления моторами
 // Мотор A

@@ -160,9 +160,7 @@ void camera_getPWM(uint16_t* panPWM, uint16_t* tiltPWM) {
 
 // ===== Инициализация и цикл =====
 
-void setup_serv() {
-  Serial.begin(115200);
-  delay(1000);
+void servo_init() {
   
   Serial.println("\n\n=== ESP32-S3 + PCA9685 Servo Controller ===");
   

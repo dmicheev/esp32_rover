@@ -58,7 +58,7 @@ static void printMotorSpeed(const char* motorName, int speed) {
 
 // ===== Публичные функции =====
 
-void setup_dc() {
+void dc_init() {
   const char* motorNames[] = {"A", "B", "C", "D"};
   
   for (int i = 0; i < MOTOR_COUNT; i++) {
@@ -70,7 +70,7 @@ void setup_dc() {
   Serial.println("DC motors initialized (A, B, C, D)");
 }
 
-void loop_dc() {
+void dc_loop() {
   // Резерв для будущей логики автоматического управления
 }
 

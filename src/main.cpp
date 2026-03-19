@@ -4,6 +4,7 @@
 #include "api.h"
 #include "servo.h"
 #include "dcmotor.h"
+#include "lidar.h"
 #include "ui.h"
 
 // ===== Константы =====
@@ -25,8 +26,9 @@ void setup() {
   ui_init();
   wifi_init();
   api_init();
-  setup_serv();
-  setup_dc();
+  servo_init();
+  dc_init();
+  lidar_init();
 
   Serial.println("\n✓ All systems initialized");
   Serial.print("Total initialization took ");
@@ -38,5 +40,6 @@ void setup() {
 void loop() {
   wifi_loop();
   api_loop();
+  lidar_loop();
   delay(LOOP_DELAY_MS);
 }

@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 // Инициализация сервоприводов
-void setup_serv();
+void servo_init();
 
 // Обработка команд Serial (должна вызываться в loop)
-void loop_serv();
+void servo_loop();
 
 // Установка угла сервопривода (для API)
 void servo_setAngle(uint8_t servoNum, uint16_t angle);
